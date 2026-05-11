@@ -27,14 +27,14 @@ schema_version: 1
 
 | ID | severity | status | owner | eta | blocker_for | summary |
 |---|---|---|---|---|---|---|
-| [MAG-M-001](audit-2026-05-11-issues/MAG-M-001.md) | p1 | partial | claude | 1d | MAG-A-*, MAG-API-* | god-file split：MainActivity.kt 891→29 行（104f2e3），AC-2 待 MAG-A-002/004 atomize |
+| [MAG-M-001](audit-2026-05-11-issues/MAG-M-001.md) | p1 | done | claude | 1d | MAG-A-*, MAG-API-* | god-file split：MainActivity 891→29（104f2e3）；AC-2 retroactively cleared by 65840a3 + 0b2dd78（所有檔 ≤ 250）|
 | [MAG-M-002](audit-2026-05-11-issues/MAG-M-002.md) | p2 | not_started | claude | 1d | — | Gradle 子模組評估：`:app` vs `:core` + `:feature-*` |
 | [MAG-A-001](audit-2026-05-11-issues/MAG-A-001.md) | p1 | not_started | claude | 1d | MAG-API-* | 抽 MagnifierViewModel：state holder 從 Composable 拉出 |
 | [MAG-A-002](audit-2026-05-11-issues/MAG-A-002.md) | p1 | not_started | claude | 2d | — | 拆 MagnifierScreen 為 atoms / molecules / organisms |
 | [MAG-A-003](audit-2026-05-11-issues/MAG-A-003.md) | p2 | done | claude | 0.5d | — | imageProxyToBitmap 拆 format-strategy（99fa6bb，6 unit tests pass，device smoke green）|
 | [MAG-A-004](audit-2026-05-11-issues/MAG-A-004.md) | p2 | not_started | claude | 1d | — | GalleryScreen 內含 grid / selection / viewer 三 mode → 拆 |
 | [MAG-API-001](audit-2026-05-11-issues/MAG-API-001.md) | p1 | partial | claude | 1d | MAG-A-001 | `MediaRepository` 介面：MediaStore CRUD 包裝（0b2dd78，device smoke green）；AC-3 instrumented test deferred |
-| [MAG-API-002](audit-2026-05-11-issues/MAG-API-002.md) | p1 | not_started | claude | 1d | MAG-A-001 | `CameraController` 介面：CameraX 生命週期 + zoom + torch |
+| [MAG-API-002](audit-2026-05-11-issues/MAG-API-002.md) | p1 | partial | claude | 1d | MAG-A-001 | `CameraController` 介面：CameraX 生命週期 + zoom + torch（65840a3）；AC-5 FakeController deferred / AC-6/7 待 device |
 | [MAG-API-003](audit-2026-05-11-issues/MAG-API-003.md) | p2 | not_started | claude | 0.5d | — | `PermissionGate` 介面：權限申請流程抽象 |
 | [MAG-D-001](audit-2026-05-11-issues/MAG-D-001.md) | polish | done | claude | 0.1d | — | 移除未使用的 accompanist-permissions:0.34.0（978278a）|
 | [MAG-D-002](audit-2026-05-11-issues/MAG-D-002.md) | polish | done | claude | 0.2d | — | CameraX / Coil hardcoded version → libs.versions.toml catalog（2d58cac）|
@@ -102,3 +102,6 @@ MAG-M-002 (Gradle submodule — 等 package 穩定 6 個月後再考慮)
 | 2026-05-11 | claude-opus-4.7 | user device smoke test all green — AC-4 marked done for MAG-D-001 / MAG-M-001 / MAG-D-002 |
 | 2026-05-11 | claude-opus-4.7 | MAG-A-003 done in commit 99fa6bb — strategy pattern + 6 unit tests (tests=6 failures=0); AC-5 (capture flow) awaits next device smoke |
 | 2026-05-11 | claude-opus-4.7 | MAG-API-001 partial in commit 0b2dd78 — MediaRepository interface + MediaStoreMediaRepository impl (157 lines); MediaStoreSource.kt deleted; UI layer has 0 ContentResolver refs; AC-3 instrumented deferred, AC-5 awaits device smoke (coroutine wrapping + Result envelope + DeletionResult are new behavior points) |
+| 2026-05-11 | claude-opus-4.7 | Device smoke green for capture flow — AC-5 done for MAG-A-003 + MAG-API-001 (ab5dcf8) |
+| 2026-05-11 | claude-opus-4.7 | MAG-API-002 partial in commit 65840a3 — CameraController + CameraXController; CameraPreview 96→37 lines; MagnifierScreen 304→250 lines; added concurrent-futures-ktx for await(); CancellationException explicitly rethrown. AC-5 FakeController deferred / AC-6/7 await device |
+| 2026-05-11 | claude-opus-4.7 | MAG-M-001 upgraded partial→done — AC-2 retroactively cleared as 65840a3 + 0b2dd78 shrunk MagnifierScreen and GalleryScreen below the 250-line target |

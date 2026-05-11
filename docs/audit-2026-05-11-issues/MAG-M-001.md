@@ -12,13 +12,15 @@ schema_version: 1
 ```yaml
 id: MAG-M-001
 severity: p1
-status: partial
+status: done
 owner: claude
 eta_days: 1
 blocker_for: [MAG-A-001, MAG-A-002, MAG-A-003, MAG-A-004, MAG-API-001, MAG-API-002, MAG-API-003]
 discovered_via: wc -l MainActivity.kt → 891 行
 fixed_in: 104f2e3
 related: [MAG-M-002]
+# AC-2 retroactively cleared by 65840a3 (MAG-API-002 shrunk MagnifierScreen 304→250)
+# and 0b2dd78 (MAG-API-001 shrunk GalleryScreen 252→214). All files now ≤ 250.
 ```
 
 ### Evidence
@@ -76,7 +78,7 @@ app/src/main/java/com/example/magnifier/
 ### Acceptance criteria
 
 - [x] AC-1: `MainActivity.kt` ≤ 50 行（只剩 Activity 殼）— **29 行** (commit 104f2e3)
-- [ ] AC-2: 每個拆出的 .kt ≤ 250 行 — **partial**：MagnifierScreen 293 / GalleryScreen 252 仍超出（pure-move 無法拆內部，待 MAG-A-002 / MAG-A-004 atomize）；其他 4 檔皆 ≤ 125 行
+- [x] AC-2: 每個拆出的 .kt ≤ 250 行 — **retroactively cleared 2026-05-11**：原 MagnifierScreen 293 / GalleryScreen 252 在 commit 65840a3（MAG-API-002 抽出 CameraController）+ 0b2dd78（MAG-API-001 抽出 MediaRepository delete 邏輯）後降至 MagnifierScreen 250 / GalleryScreen 214；其他檔 ≤ 157
 - [x] AC-3: `./gradlew assembleDebug` 編譯通過 — **BUILD SUCCESSFUL in 6s** (2026-05-11)
 - [x] AC-4: 手機跑 app，相機預覽 / zoom / 拍照 / 相簿 / 刪除 全部正常 — 用戶 2026-05-11 smoke test 全綠
 - [ ] AC-5: `git diff --stat` 顯示新增檔案而非整檔重寫（保留 git blame 歷史）— **not used**：single-file → multi-file split 無法用 `git mv`，新檔 git blame 從零開始；用 commit message + audit 補償歷史

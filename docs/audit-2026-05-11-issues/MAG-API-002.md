@@ -2,7 +2,7 @@
 doc: magnifier/audit/2026-05-11/MAG-API-002
 title: CameraController 介面 — CameraX 生命週期 + zoom + torch
 created: 2026-05-11T00:00:00+08:00
-updated: 2026-05-11T00:00:00+08:00
+updated: 2026-05-11T17:00:00+08:00
 author: claude-opus-4.7
 schema_version: 1
 ---
@@ -12,12 +12,12 @@ schema_version: 1
 ```yaml
 id: MAG-API-002
 severity: p1
-status: not_started
+status: partial
 owner: claude
 eta_days: 1
 blocker_for: [MAG-A-001]
 discovered_via: CameraX 三大操作（綁定 / zoom / torch / capture）散在 CameraPreview L465 + MagnifierScreen L789 takePicture
-fixed_in: null
+fixed_in: 65840a3
 related: [MAG-A-001, MAG-A-002]
 ```
 
@@ -151,13 +151,13 @@ API 設計遵循 `~/.claude/rules/api-design.md`：
 
 ### Acceptance criteria
 
-- [ ] AC-1: `CameraController` interface 與 `CameraXController` impl 分離
-- [ ] AC-2: `CameraPreview` Composable ≤ 30 行
-- [ ] AC-3: 無 `cameraControl.` 直接呼叫在 UI 層
-- [ ] AC-4: `bind` / `release` 配對，DisposableEffect 處理
-- [ ] AC-5: 寫 `FakeCameraController` 供 Compose Preview 使用
-- [ ] AC-6: 實機跑 app，預覽 / zoom / 手電筒 / 拍照全部正常；切後台再回前台 preview 不掛
-- [ ] AC-7: capture 失敗（如記憶體不足）UI 顯示「拍照失敗」而非 crash
+- [x] AC-1: `CameraController` interface 與 `CameraXController` impl 分離 — `data/camera/CameraController.kt`(14) + `CameraXController.kt`(91) (65840a3)
+- [x] AC-2: `CameraPreview` Composable ≤ 30 行 — 整檔 37 行（含 imports）；composable function body ~23 行
+- [x] AC-3: 無 `cameraControl.` 直接呼叫在 UI 層 — `grep cameraControl\. app/src/main/.../ui/` exit 1 (0 命中)
+- [x] AC-4: `bind` / `release` 配對，DisposableEffect 處理 — CameraPreview.kt 有 `LaunchedEffect(controller, lifecycleOwner) { bind(...) }` 配 `DisposableEffect(controller) { onDispose { release() } }`
+- [ ] AC-5: 寫 `FakeCameraController` 供 Compose Preview 使用 — **deferred**：本次重構未做 Preview 範本，留作後續工作（介面已抽好，加 fake 是純機械作業）
+- [ ] AC-6: 實機跑 app，預覽 / zoom / 手電筒 / 拍照全部正常；切後台再回前台 preview 不掛 — **待用戶實機驗證**（這次重構真正改了 CameraX lifecycle 邊界，重點驗背景/前景切換）
+- [ ] AC-7: capture 失敗（如記憶體不足）UI 顯示「拍照失敗」而非 crash — **待用戶實機驗證**（onFailure 路徑已寫 Toast，但 trigger 失敗的條件難在測試環境模擬）
 
 ### Verification
 
