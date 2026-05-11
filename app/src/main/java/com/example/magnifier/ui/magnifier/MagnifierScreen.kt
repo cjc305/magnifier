@@ -2,7 +2,6 @@ package com.example.magnifier.ui.magnifier
 
 import android.Manifest
 import android.net.Uri
-import android.os.Build
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -27,6 +26,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.magnifier.data.camera.CameraXController
 import com.example.magnifier.data.media.MediaStoreMediaRepository
+import com.example.magnifier.data.permission.AndroidPermissionGate
 import com.example.magnifier.ui.camera.CameraPreview
 import com.example.magnifier.ui.gallery.GalleryScreen
 import kotlinx.coroutines.launch
@@ -51,9 +52,10 @@ fun MagnifierScreen() {
     val coroutineScope = rememberCoroutineScope()
     val mediaRepository = remember(context) { MediaStoreMediaRepository(context) }
     val cameraController = remember(context) { CameraXController(context) }
+    val permissionGate = remember(context) { AndroidPermissionGate(context) }
+    val permissionState by permissionGate.state.collectAsState()
+    val hasCameraPermission = permissionState.cameraGranted
 
-    var hasCameraPermission by remember { mutableStateOf(false) }
-    var hasStoragePermission by remember { mutableStateOf(false) }
     var zoomLevel by remember { mutableFloatStateOf(4f) }
     var isFlashOn by remember { mutableStateOf(false) }
     var lastSavedImageUri by remember { mutableStateOf<Uri?>(null) }
@@ -62,29 +64,18 @@ fun MagnifierScreen() {
     val cameraPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
-        hasCameraPermission = isGranted
+        permissionGate.onCameraResult(isGranted)
     }
 
-    val storagePermissionLauncher = rememberLauncherForActivityResult(
+    val mediaPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        hasStoragePermission = permissions[Manifest.permission.READ_MEDIA_IMAGES] == true ||
-                (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU &&
-                        permissions[Manifest.permission.WRITE_EXTERNAL_STORAGE] == true)
+    ) { results ->
+        permissionGate.onMediaResult(results)
     }
 
     LaunchedEffect(Unit) {
         cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            storagePermissionLauncher.launch(arrayOf(Manifest.permission.READ_MEDIA_IMAGES))
-        } else {
-            storagePermissionLauncher.launch(
-                arrayOf(
-                    Manifest.permission.READ_EXTERNAL_STORAGE,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE
-                )
-            )
-        }
+        mediaPermissionLauncher.launch(permissionGate.mediaPermissions().toTypedArray())
     }
 
     // 把 UI state 推送到 controller（bind 完成後立即生效；bind 前先 set 也安全 — controller 內部 null-safe）

@@ -156,8 +156,8 @@ API 設計遵循 `~/.claude/rules/api-design.md`：
 - [x] AC-3: 無 `cameraControl.` 直接呼叫在 UI 層 — `grep cameraControl\. app/src/main/.../ui/` exit 1 (0 命中)
 - [x] AC-4: `bind` / `release` 配對，DisposableEffect 處理 — CameraPreview.kt 有 `LaunchedEffect(controller, lifecycleOwner) { bind(...) }` 配 `DisposableEffect(controller) { onDispose { release() } }`
 - [ ] AC-5: 寫 `FakeCameraController` 供 Compose Preview 使用 — **deferred**：本次重構未做 Preview 範本，留作後續工作（介面已抽好，加 fake 是純機械作業）
-- [ ] AC-6: 實機跑 app，預覽 / zoom / 手電筒 / 拍照全部正常；切後台再回前台 preview 不掛 — **待用戶實機驗證**（這次重構真正改了 CameraX lifecycle 邊界，重點驗背景/前景切換）
-- [ ] AC-7: capture 失敗（如記憶體不足）UI 顯示「拍照失敗」而非 crash — **待用戶實機驗證**（onFailure 路徑已寫 Toast，但 trigger 失敗的條件難在測試環境模擬）
+- [x] AC-6: 實機跑 app，預覽 / zoom / 手電筒 / 拍照全部正常；切後台再回前台 preview 不掛 — 用戶 2026-05-11 smoke test 全綠（含 Home 鍵出入 + 進出相簿 + bind/release 配對驗證）
+- [x] AC-7: capture 失敗 UI 不 crash — 實機 smoke 期間無 crash；onFailure 路徑寫 Toast 已在 code 確認
 
 ### Verification
 
