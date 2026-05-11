@@ -2,7 +2,7 @@
 doc: magnifier/audit/2026-05-11/MAG-D-003
 title: DI 框架評估 — Hilt vs manual constructor injection
 created: 2026-05-11T00:00:00+08:00
-updated: 2026-05-11T00:00:00+08:00
+updated: 2026-05-11T19:00:00+08:00
 author: claude-opus-4.7
 schema_version: 1
 ---
@@ -12,14 +12,16 @@ schema_version: 1
 ```yaml
 id: MAG-D-003
 severity: p2
-status: not_started
+status: partial
 owner: claude
 eta_days: 0.5
 blocker_for: []
 discovered_via: MAG-A-001 / MAG-API-* 完成後 ViewModel 需要依賴 MediaRepository / CameraController / PermissionGate → 必須有 DI 策略
-fixed_in: null
+fixed_in: 0cb3058
 related: [MAG-A-001, MAG-API-001, MAG-API-002, MAG-API-003]
 ```
+
+> **2026-05-11 update**：本 issue 原本排在 MAG-A-001 之後，但實作 MAG-A-001 時發現「ViewModel 跨 rotation 存活、deps 卻被 `remember` 重建」會造成孤兒 controller bug → Option B (manual constructor injection) 必須提前落地。Phase A of MAG-A-001 (commit 0cb3058) 已完成 Option B 的骨架：`MagnifierApplication` + `AppContainer` (by-lazy MediaRepository / CameraController / PermissionGate) + AndroidManifest 註冊。本 issue 因此標 partial — 決策已執行 Option B，剩餘是「跨季度重新評估」的決策時間戳記與升 Hilt 的觸發條件 documentation。
 
 ### Evidence
 
@@ -158,11 +160,11 @@ val viewModel: MagnifierViewModel = koinViewModel()
 
 ### Acceptance criteria
 
-- [ ] AC-1: 決策時間戳記與選項記在本 doc Change log
-- [ ] AC-2: 若選 Option B：建 `MagnifierApplication.kt`，AndroidManifest 註冊 `android:name=".MagnifierApplication"`
-- [ ] AC-3: 若選 Option B：MainActivity 用 `by viewModels { factory }` 取得 ViewModel
-- [ ] AC-4: 不論哪個 option，新增 ViewModel 流程文檔化（哪些檔要改）
-- [ ] AC-5: 編譯時間（clean build）相較重構前 ±20% 內（避免 kapt 拖累）
+- [x] AC-1: 決策時間戳記與選項記在本 doc Change log — 2026-05-11 採 Option B（見上方更新說明 + Change log）
+- [x] AC-2: Option B：建 `MagnifierApplication.kt`，AndroidManifest 註冊 `android:name=".MagnifierApplication"` — commit 0cb3058
+- [x] AC-3: Option B：Composable 用 `viewModel(factory = ...)` 取得 ViewModel — `MagnifierScreen` / `GalleryScreen` 用 `androidx.lifecycle.viewmodel.compose.viewModel` (commit 1d81ede)
+- [ ] AC-4: 新增 ViewModel 流程文檔化 — **deferred**：等加第 3 個 ViewModel 時再寫 SOP（目前 2 個 VM，pattern 還在演進）
+- [ ] AC-5: clean build 時間 ±20% — **待量測**：MAG-A-001 完整 chain 跑完後一次 clean build 計時對照
 
 ### Verification
 

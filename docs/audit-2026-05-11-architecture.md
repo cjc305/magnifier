@@ -29,7 +29,7 @@ schema_version: 1
 |---|---|---|---|---|---|---|
 | [MAG-M-001](audit-2026-05-11-issues/MAG-M-001.md) | p1 | done | claude | 1d | MAG-A-*, MAG-API-* | god-file split：MainActivity 891→29（104f2e3）；AC-2 retroactively cleared by 65840a3 + 0b2dd78（所有檔 ≤ 250）|
 | [MAG-M-002](audit-2026-05-11-issues/MAG-M-002.md) | p2 | not_started | claude | 1d | — | Gradle 子模組評估：`:app` vs `:core` + `:feature-*` |
-| [MAG-A-001](audit-2026-05-11-issues/MAG-A-001.md) | p1 | not_started | claude | 1d | MAG-API-* | 抽 MagnifierViewModel：state holder 從 Composable 拉出 |
+| [MAG-A-001](audit-2026-05-11-issues/MAG-A-001.md) | p1 | partial | claude | 1d | MAG-A-002 | 抽 MagnifierViewModel + GalleryViewModel（0cb3058+1d81ede+a44279c，7 VM tests pass）；AC-3 rotation 待 device |
 | [MAG-A-002](audit-2026-05-11-issues/MAG-A-002.md) | p1 | not_started | claude | 2d | — | 拆 MagnifierScreen 為 atoms / molecules / organisms |
 | [MAG-A-003](audit-2026-05-11-issues/MAG-A-003.md) | p2 | done | claude | 0.5d | — | imageProxyToBitmap 拆 format-strategy（99fa6bb，6 unit tests pass，device smoke green）|
 | [MAG-A-004](audit-2026-05-11-issues/MAG-A-004.md) | p2 | not_started | claude | 1d | — | GalleryScreen 內含 grid / selection / viewer 三 mode → 拆 |
@@ -38,7 +38,7 @@ schema_version: 1
 | [MAG-API-003](audit-2026-05-11-issues/MAG-API-003.md) | p2 | partial | claude | 0.5d | — | `PermissionGate` 介面：權限申請流程抽象（93b04de）；AC-3 PermanentlyDenied / AC-4 launcher 搬出 / AC-5 拒絕 case 都 deferred |
 | [MAG-D-001](audit-2026-05-11-issues/MAG-D-001.md) | polish | done | claude | 0.1d | — | 移除未使用的 accompanist-permissions:0.34.0（978278a）|
 | [MAG-D-002](audit-2026-05-11-issues/MAG-D-002.md) | polish | done | claude | 0.2d | — | CameraX / Coil hardcoded version → libs.versions.toml catalog（2d58cac）|
-| [MAG-D-003](audit-2026-05-11-issues/MAG-D-003.md) | p2 | not_started | claude | 0.5d | MAG-API-* | DI 框架評估：Hilt vs manual constructor injection |
+| [MAG-D-003](audit-2026-05-11-issues/MAG-D-003.md) | p2 | partial | claude | 0.5d | — | DI 框架：採 Option B (manual factory + AppContainer)（0cb3058）；AC-4/5 documentation+benchmark deferred |
 
 ```bash
 # Copy-paste filter — 看當前 open issues
@@ -107,3 +107,5 @@ MAG-M-002 (Gradle submodule — 等 package 穩定 6 個月後再考慮)
 | 2026-05-11 | claude-opus-4.7 | MAG-M-001 upgraded partial→done — AC-2 retroactively cleared as 65840a3 + 0b2dd78 shrunk MagnifierScreen and GalleryScreen below the 250-line target |
 | 2026-05-11 | claude-opus-4.7 | Device smoke green for MAG-API-002 — AC-6/7 done; controller bind/release across foreground↔background verified |
 | 2026-05-11 | claude-opus-4.7 | MAG-API-003 partial in commit 93b04de — PermissionGate + AndroidPermissionGate; MagnifierScreen drops Build.VERSION + duplicate permission booleans (250→241 lines). AC-3 PermanentlyDenied + AC-4 launcher relocation + AC-5 negative cases deferred (need Activity ref / ViewModel) |
+| 2026-05-11 | claude-opus-4.7 | MAG-A-001 partial in commits 0cb3058 (Application+AppContainer) + 1d81ede (MagnifierViewModel + GalleryViewModel + screen integration) + a44279c (7 unit tests + Channel events). Files: MagnifierScreen 241→192, GalleryScreen 214→194. AC-1/2/4/5 ✅, AC-3 rotation awaits device |
+| 2026-05-11 | claude-opus-4.7 | MAG-D-003 partial in commit 0cb3058 — Option B (manual factory + AppContainer) adopted because MAG-A-001 forced the decision. AC-1/2/3 ✅. AC-4/5 (SOP doc + compile-time benchmark) deferred |

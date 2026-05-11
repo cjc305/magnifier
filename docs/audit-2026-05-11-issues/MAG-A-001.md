@@ -2,7 +2,7 @@
 doc: magnifier/audit/2026-05-11/MAG-A-001
 title: 抽 MagnifierViewModel — state holder 從 Composable 拉出
 created: 2026-05-11T00:00:00+08:00
-updated: 2026-05-11T00:00:00+08:00
+updated: 2026-05-11T19:00:00+08:00
 author: claude-opus-4.7
 schema_version: 1
 ---
@@ -12,13 +12,13 @@ schema_version: 1
 ```yaml
 id: MAG-A-001
 severity: p1
-status: not_started
+status: partial
 owner: claude
 eta_days: 1
 blocker_for: [MAG-A-002]
 discovered_via: grep 'mutableStateOf\|remember' MainActivity.kt → state 全在 Composable 內
-fixed_in: null
-related: [MAG-API-001, MAG-API-002, MAG-API-003]
+fixed_in: 0cb3058+1d81ede+a44279c
+related: [MAG-API-001, MAG-API-002, MAG-API-003, MAG-D-003]
 ```
 
 ### Evidence
@@ -125,11 +125,15 @@ GalleryScreen 同理抽 `GalleryViewModel`。
 
 ### Acceptance criteria
 
-- [ ] AC-1: `MagnifierScreen` Composable 內無 `mutableStateOf` 業務 state（local UI state 如 slider drag 可保留）
-- [ ] AC-2: `MagnifierViewModel` 100% pure Kotlin（無 `@Composable`、無 Android framework dep 除 ViewModel）
-- [ ] AC-3: 旋轉螢幕後 zoom level / flash 狀態保留
-- [ ] AC-4: 寫 `MagnifierViewModelTest` 至少 4 個 case（setZoom / toggleFlash / capture success / capture failure）
-- [ ] AC-5: GalleryScreen 同樣抽出 GalleryViewModel
+- [x] AC-1: `MagnifierScreen` Composable 內無 `mutableStateOf` 業務 state — `grep mutableStateOf MagnifierScreen.kt` exit 1
+- [x] AC-2: `MagnifierViewModel` 100% pure Kotlin — `grep "import androidx.compose" MagnifierViewModel.kt` exit 1（僅 import androidx.lifecycle.* 與 kotlinx.coroutines.*）
+- [ ] AC-3: 旋轉螢幕後 zoom level / flash 狀態保留 — **待用戶實機驗證**（架構面 AppContainer + ViewModelStoreOwner 已確保 process-scoped 依賴 + cross-rotation VM survival）
+- [x] AC-4: 寫 `MagnifierViewModelTest` 至少 4 個 case — **7 cases 全綠**：setZoom clamp / toggleFlash / capture success / capture failure (controller) / capture-but-save-fails / onImagesDeleted match / onImagesDeleted no-match
+- [x] AC-5: GalleryScreen 同樣抽出 GalleryViewModel — GalleryViewModel.kt 86 行 + UiState + Factory；selection / delete / viewer 全部 state 移入
+
+實作偏離原 spec 的兩處：
+1. PermanentlyDenied permission 偵測需要 Activity ref，本次未做（MAG-API-003 AC-3 deferred）
+2. 事件流改用 `Channel<UiEvent>` 而非 `SharedFlow`，因為 SharedFlow(replay=0) 對 rotation/test 都有「subscriber 不在時 emit 丟失」問題
 
 ### Verification
 
