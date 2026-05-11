@@ -1,9 +1,6 @@
 package com.example.magnifier.ui.gallery
 
 import android.net.Uri
-import android.os.Build
-import android.provider.DocumentsContract
-import android.util.Log
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,6 +28,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,15 +38,18 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.example.magnifier.data.media.queryMagnifierImages
+import com.example.magnifier.data.media.MediaRepository
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GalleryScreen(
+    mediaRepository: MediaRepository,
     onBack: () -> Unit,
-    onImageDeleted: ((Uri) -> Unit)? = null
+    onImageDeleted: ((Uri) -> Unit)? = null,
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     var imageUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
     var isSelectionMode by remember { mutableStateOf(false) }
     var selectedUris by remember { mutableStateOf<Set<Uri>>(emptySet()) }
@@ -56,64 +57,25 @@ fun GalleryScreen(
 
     // 查詢所有儲存的圖片
     LaunchedEffect(Unit) {
-        imageUris = queryMagnifierImages(context)
+        imageUris = mediaRepository.queryMagnifierImages()
     }
 
-    // 刪除選中的圖片
+    // 刪除選中的圖片（透過 MediaRepository，per-URI fallback 邏輯封裝於實作層）
     fun deleteSelectedImages() {
-        val count = selectedUris.size
-        var deletedCount = 0
-        selectedUris.forEach { uri ->
-            try {
-                var deleted = false
-
-                // 嘗試使用 DocumentsContract 刪除（適用於 document URI）
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT &&
-                    DocumentsContract.isDocumentUri(context, uri)) {
-                    try {
-                        deleted = DocumentsContract.deleteDocument(context.contentResolver, uri)
-                        if (deleted) {
-                            Log.d("Magnifier", "使用 DocumentsContract 刪除圖片: $uri")
-                        }
-                    } catch (e: Exception) {
-                        Log.d("Magnifier", "DocumentsContract 刪除失敗，嘗試其他方法: $uri", e)
-                    }
-                }
-
-                // 如果 DocumentsContract 失敗，嘗試使用 MediaStore 刪除
-                if (!deleted) {
-                    val result = context.contentResolver.delete(uri, null, null)
-                    if (result > 0) {
-                        deleted = true
-                        Log.d("Magnifier", "使用 MediaStore 刪除圖片: $uri")
-                    } else {
-                        Log.w("Magnifier", "刪除返回 0，可能圖片不存在或無權限: $uri")
-                    }
-                }
-
-                if (deleted) {
-                    deletedCount++
-                    Log.d("Magnifier", "已刪除圖片: $uri")
-                    // 通知父組件圖片已被刪除
-                    onImageDeleted?.invoke(uri)
-                } else {
-                    Log.e("Magnifier", "無法刪除圖片: $uri")
-                }
-            } catch (e: SecurityException) {
-                Log.e("Magnifier", "刪除圖片權限不足: $uri", e)
-            } catch (e: Exception) {
-                Log.e("Magnifier", "刪除圖片失敗: $uri", e)
-            }
+        val toDelete = selectedUris
+        coroutineScope.launch {
+            val result = mediaRepository.delete(toDelete)
+            result.deleted.forEach { uri -> onImageDeleted?.invoke(uri) }
+            imageUris = mediaRepository.queryMagnifierImages()
+            selectedUris = emptySet()
+            isSelectionMode = false
+            android.widget.Toast.makeText(
+                context,
+                if (result.deletedCount > 0) "已刪除 ${result.deletedCount} 張圖片"
+                else "刪除失敗，請檢查權限",
+                android.widget.Toast.LENGTH_SHORT,
+            ).show()
         }
-        // 重新查詢圖片列表
-        imageUris = queryMagnifierImages(context)
-        selectedUris = emptySet()
-        isSelectionMode = false
-        android.widget.Toast.makeText(
-            context,
-            if (deletedCount > 0) "已刪除 $deletedCount 張圖片" else "刪除失敗，請檢查權限",
-            android.widget.Toast.LENGTH_SHORT
-        ).show()
     }
 
     Scaffold(

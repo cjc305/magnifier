@@ -34,6 +34,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,10 +45,10 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import coil.compose.AsyncImage
 import com.example.magnifier.data.media.ImageDecoder
-import com.example.magnifier.data.media.queryMagnifierImages
-import com.example.magnifier.data.media.saveImageToGallery
+import com.example.magnifier.data.media.MediaStoreMediaRepository
 import com.example.magnifier.ui.camera.CameraPreview
 import com.example.magnifier.ui.gallery.GalleryScreen
+import kotlinx.coroutines.launch
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -55,6 +56,8 @@ import java.util.concurrent.Executors
 fun MagnifierScreen() {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
+    val coroutineScope = rememberCoroutineScope()
+    val mediaRepository = remember(context) { MediaStoreMediaRepository(context) }
 
     var hasCameraPermission by remember { mutableStateOf(false) }
     var hasStoragePermission by remember { mutableStateOf(false) }
@@ -99,13 +102,17 @@ fun MagnifierScreen() {
     // 根據狀態顯示相機或相簿
     if (showGallery) {
         GalleryScreen(
+            mediaRepository = mediaRepository,
             onBack = {
                 showGallery = false
                 // 從相簿返回時，檢查 lastSavedImageUri 是否還存在
-                lastSavedImageUri?.let { uri ->
-                    val allImages = queryMagnifierImages(context)
-                    if (!allImages.contains(uri)) {
-                        lastSavedImageUri = null
+                val uri = lastSavedImageUri
+                if (uri != null) {
+                    coroutineScope.launch {
+                        val allImages = mediaRepository.queryMagnifierImages()
+                        if (!allImages.contains(uri)) {
+                            lastSavedImageUri = null
+                        }
                     }
                 }
             },
@@ -197,32 +204,36 @@ fun MagnifierScreen() {
                                             executor,
                                             object : ImageCapture.OnImageCapturedCallback() {
                                                 override fun onCaptureSuccess(image: androidx.camera.core.ImageProxy) {
-                                                    try {
-                                                        val bitmap = ImageDecoder.decode(image)
-                                                        val savedUri: Uri? = saveImageToGallery(context, bitmap)
-                                                        if (savedUri != null) {
-                                                            lastSavedImageUri = savedUri
+                                                    coroutineScope.launch {
+                                                        try {
+                                                            val bitmap = ImageDecoder.decode(image)
+                                                            mediaRepository.save(bitmap)
+                                                                .onSuccess { savedUri ->
+                                                                    lastSavedImageUri = savedUri
+                                                                    android.widget.Toast.makeText(
+                                                                        context,
+                                                                        "圖片已儲存到相簿",
+                                                                        android.widget.Toast.LENGTH_SHORT
+                                                                    ).show()
+                                                                }
+                                                                .onFailure { e ->
+                                                                    Log.e("Magnifier", "儲存失敗", e)
+                                                                    android.widget.Toast.makeText(
+                                                                        context,
+                                                                        "儲存失敗，請檢查權限",
+                                                                        android.widget.Toast.LENGTH_SHORT
+                                                                    ).show()
+                                                                }
+                                                        } catch (e: Exception) {
+                                                            Log.e("Magnifier", "圖片處理或儲存失敗", e)
                                                             android.widget.Toast.makeText(
                                                                 context,
-                                                                "圖片已儲存到相簿",
+                                                                "儲存失敗: ${e.message}",
                                                                 android.widget.Toast.LENGTH_SHORT
                                                             ).show()
-                                                        } else {
-                                                            android.widget.Toast.makeText(
-                                                                context,
-                                                                "儲存失敗，請檢查權限",
-                                                                android.widget.Toast.LENGTH_SHORT
-                                                            ).show()
+                                                        } finally {
+                                                            image.close()
                                                         }
-                                                    } catch (e: Exception) {
-                                                        Log.e("Magnifier", "圖片處理或儲存失敗", e)
-                                                        android.widget.Toast.makeText(
-                                                            context,
-                                                            "儲存失敗: ${e.message}",
-                                                            android.widget.Toast.LENGTH_SHORT
-                                                        ).show()
-                                                    } finally {
-                                                        image.close()
                                                     }
                                                 }
                                             }
