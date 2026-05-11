@@ -1,8 +1,6 @@
 package com.example.magnifier.ui.magnifier
 
 import android.Manifest
-import android.net.Uri
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -28,83 +26,71 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.example.magnifier.data.camera.CameraXController
-import com.example.magnifier.data.media.MediaStoreMediaRepository
-import com.example.magnifier.data.permission.AndroidPermissionGate
+import com.example.magnifier.MagnifierApplication
+import com.example.magnifier.ui.UiEvent
 import com.example.magnifier.ui.camera.CameraPreview
 import com.example.magnifier.ui.gallery.GalleryScreen
-import kotlinx.coroutines.launch
 
 @Composable
 fun MagnifierScreen() {
     val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
-    val mediaRepository = remember(context) { MediaStoreMediaRepository(context) }
-    val cameraController = remember(context) { CameraXController(context) }
-    val permissionGate = remember(context) { AndroidPermissionGate(context) }
-    val permissionState by permissionGate.state.collectAsState()
-    val hasCameraPermission = permissionState.cameraGranted
+    val app = context.applicationContext as MagnifierApplication
+    val container = app.container
 
-    var zoomLevel by remember { mutableFloatStateOf(4f) }
-    var isFlashOn by remember { mutableStateOf(false) }
-    var lastSavedImageUri by remember { mutableStateOf<Uri?>(null) }
-    var showGallery by remember { mutableStateOf(false) }
+    val viewModel: MagnifierViewModel = viewModel(
+        factory = remember(container) {
+            MagnifierViewModelFactory(
+                container.mediaRepository,
+                container.cameraController,
+                container.permissionGate,
+            )
+        }
+    )
+
+    val uiState by viewModel.uiState.collectAsState()
+    val permissions by viewModel.permissions.collectAsState()
+
+    // Toast 事件
+    LaunchedEffect(viewModel) {
+        viewModel.events.collect { event ->
+            when (event) {
+                is UiEvent.ShowToast ->
+                    android.widget.Toast.makeText(
+                        context, event.message, android.widget.Toast.LENGTH_SHORT
+                    ).show()
+            }
+        }
+    }
 
     val cameraPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        permissionGate.onCameraResult(isGranted)
-    }
+    ) { granted -> viewModel.onCameraPermissionResult(granted) }
 
     val mediaPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
-    ) { results ->
-        permissionGate.onMediaResult(results)
-    }
+    ) { results -> viewModel.onMediaPermissionResult(results) }
 
     LaunchedEffect(Unit) {
         cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-        mediaPermissionLauncher.launch(permissionGate.mediaPermissions().toTypedArray())
+        mediaPermissionLauncher.launch(viewModel.mediaPermissionList().toTypedArray())
     }
 
-    // 把 UI state 推送到 controller（bind 完成後立即生效；bind 前先 set 也安全 — controller 內部 null-safe）
-    LaunchedEffect(zoomLevel) { cameraController.setZoom(zoomLevel) }
-    LaunchedEffect(isFlashOn) { cameraController.setTorch(isFlashOn) }
-
-    // 根據狀態顯示相機或相簿
-    if (showGallery) {
+    if (uiState.showGallery) {
         GalleryScreen(
-            mediaRepository = mediaRepository,
+            mediaRepository = container.mediaRepository,
             onBack = {
-                showGallery = false
-                // 從相簿返回時，檢查 lastSavedImageUri 是否還存在
-                val uri = lastSavedImageUri
-                if (uri != null) {
-                    coroutineScope.launch {
-                        val allImages = mediaRepository.queryMagnifierImages()
-                        if (!allImages.contains(uri)) {
-                            lastSavedImageUri = null
-                        }
-                    }
-                }
+                viewModel.showGallery(false)
+                viewModel.onGalleryReturn()
             },
-            onImageDeleted = { deletedUri ->
-                // 如果刪除的圖片是當前顯示的縮圖，清除它
-                if (lastSavedImageUri == deletedUri) {
-                    lastSavedImageUri = null
-                }
-            }
+            onImagesDeleted = { uris -> viewModel.onImagesDeleted(uris) },
         )
     } else {
         Scaffold(
@@ -115,9 +101,9 @@ fun MagnifierScreen() {
                     .fillMaxSize()
                     .padding(paddingValues)
             ) {
-                if (hasCameraPermission) {
+                if (permissions.cameraGranted) {
                     CameraPreview(
-                        controller = cameraController,
+                        controller = container.cameraController,
                         modifier = Modifier.fillMaxSize(),
                     )
 
@@ -128,90 +114,55 @@ fun MagnifierScreen() {
                             .padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        // 放大倍率顯示和滑桿
                         Column {
                             Text(
-                                text = "放大倍率: ${String.format("%.1f", zoomLevel)}x",
+                                text = "放大倍率: ${String.format("%.1f", uiState.zoomLevel)}x",
                                 style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Slider(
-                                value = zoomLevel,
-                                onValueChange = { zoomLevel = it },
+                                value = uiState.zoomLevel,
+                                onValueChange = viewModel::setZoom,
                                 valueRange = 1f..10f,
                                 steps = 89,
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
 
-                        // 功能按鈕行
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceEvenly,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            // 手電筒開關
-                            IconButton(
-                                onClick = { isFlashOn = !isFlashOn }
-                            ) {
+                            // 手電筒
+                            IconButton(onClick = viewModel::toggleFlash) {
                                 Icon(
                                     imageVector = Icons.Default.FlashOn,
-                                    contentDescription = if (isFlashOn) "關閉手電筒" else "開啟手電筒",
-                                    tint = if (isFlashOn) MaterialTheme.colorScheme.primary
+                                    contentDescription = if (uiState.isFlashOn) "關閉手電筒" else "開啟手電筒",
+                                    tint = if (uiState.isFlashOn) MaterialTheme.colorScheme.primary
                                     else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                                 )
                             }
 
-                            // 拍照儲存
+                            // 拍照
                             IconButton(
-                                onClick = {
-                                    coroutineScope.launch {
-                                        cameraController.capture()
-                                            .onSuccess { bitmap ->
-                                                mediaRepository.save(bitmap)
-                                                    .onSuccess { savedUri ->
-                                                        lastSavedImageUri = savedUri
-                                                        android.widget.Toast.makeText(
-                                                            context,
-                                                            "圖片已儲存到相簿",
-                                                            android.widget.Toast.LENGTH_SHORT
-                                                        ).show()
-                                                    }
-                                                    .onFailure { e ->
-                                                        Log.e("Magnifier", "儲存失敗", e)
-                                                        android.widget.Toast.makeText(
-                                                            context,
-                                                            "儲存失敗，請檢查權限",
-                                                            android.widget.Toast.LENGTH_SHORT
-                                                        ).show()
-                                                    }
-                                            }
-                                            .onFailure { e ->
-                                                Log.e("Magnifier", "拍照失敗", e)
-                                                android.widget.Toast.makeText(
-                                                    context,
-                                                    "拍照失敗: ${e.message}",
-                                                    android.widget.Toast.LENGTH_SHORT
-                                                ).show()
-                                            }
-                                    }
-                                },
-                                enabled = hasCameraPermission,
+                                onClick = viewModel::capture,
+                                enabled = permissions.cameraGranted,
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.CameraAlt,
                                     contentDescription = "拍照儲存",
-                                    tint = if (hasCameraPermission) MaterialTheme.colorScheme.primary
+                                    tint = if (permissions.cameraGranted) MaterialTheme.colorScheme.primary
                                     else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                                     modifier = Modifier.size(32.dp)
                                 )
                             }
 
-                            // 顯示最後儲存的圖片縮圖
-                            if (lastSavedImageUri != null) {
-                                IconButton(onClick = { showGallery = true }) {
+                            // 相簿入口
+                            if (uiState.lastSavedImageUri != null) {
+                                IconButton(onClick = { viewModel.showGallery(true) }) {
                                     AsyncImage(
-                                        model = lastSavedImageUri,
+                                        model = uiState.lastSavedImageUri,
                                         contentDescription = "查看最後儲存的圖片",
                                         modifier = Modifier
                                             .size(48.dp)
@@ -219,7 +170,7 @@ fun MagnifierScreen() {
                                     )
                                 }
                             } else {
-                                IconButton(onClick = { showGallery = true }) {
+                                IconButton(onClick = { viewModel.showGallery(true) }) {
                                     Icon(
                                         imageVector = Icons.Default.PhotoLibrary,
                                         contentDescription = "查看相簿",

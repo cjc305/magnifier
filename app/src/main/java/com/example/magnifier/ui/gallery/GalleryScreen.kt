@@ -25,11 +25,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,45 +35,39 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.magnifier.data.media.MediaRepository
-import kotlinx.coroutines.launch
+import com.example.magnifier.ui.UiEvent
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GalleryScreen(
     mediaRepository: MediaRepository,
     onBack: () -> Unit,
-    onImageDeleted: ((Uri) -> Unit)? = null,
+    onImagesDeleted: (Set<Uri>) -> Unit = {},
 ) {
     val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
-    var imageUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
-    var isSelectionMode by remember { mutableStateOf(false) }
-    var selectedUris by remember { mutableStateOf<Set<Uri>>(emptySet()) }
-    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    val viewModel: GalleryViewModel = viewModel(
+        factory = remember(mediaRepository) { GalleryViewModelFactory(mediaRepository) }
+    )
+    val uiState by viewModel.uiState.collectAsState()
 
-    // 查詢所有儲存的圖片
-    LaunchedEffect(Unit) {
-        imageUris = mediaRepository.queryMagnifierImages()
+    // Toast 事件
+    LaunchedEffect(viewModel) {
+        viewModel.events.collect { event ->
+            when (event) {
+                is UiEvent.ShowToast ->
+                    android.widget.Toast.makeText(
+                        context, event.message, android.widget.Toast.LENGTH_SHORT
+                    ).show()
+            }
+        }
     }
 
-    // 刪除選中的圖片（透過 MediaRepository，per-URI fallback 邏輯封裝於實作層）
-    fun deleteSelectedImages() {
-        val toDelete = selectedUris
-        coroutineScope.launch {
-            val result = mediaRepository.delete(toDelete)
-            result.deleted.forEach { uri -> onImageDeleted?.invoke(uri) }
-            imageUris = mediaRepository.queryMagnifierImages()
-            selectedUris = emptySet()
-            isSelectionMode = false
-            android.widget.Toast.makeText(
-                context,
-                if (result.deletedCount > 0) "已刪除 ${result.deletedCount} 張圖片"
-                else "刪除失敗，請檢查權限",
-                android.widget.Toast.LENGTH_SHORT,
-            ).show()
-        }
+    // 把刪除事件廣播給父層（讓 MagnifierViewModel 清掉縮圖）
+    LaunchedEffect(viewModel) {
+        viewModel.deletedImages.collect { uris -> onImagesDeleted(uris) }
     }
 
     Scaffold(
@@ -83,8 +75,9 @@ fun GalleryScreen(
             TopAppBar(
                 title = {
                     Text(
-                        if (isSelectionMode) {
-                            if (selectedUris.isEmpty()) "選擇照片" else "已選擇 ${selectedUris.size} 張"
+                        if (uiState.isSelectionMode) {
+                            if (uiState.selectedUris.isEmpty()) "選擇照片"
+                            else "已選擇 ${uiState.selectedUris.size} 張"
                         } else {
                             "相簿"
                         }
@@ -92,15 +85,10 @@ fun GalleryScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = {
-                        if (isSelectionMode) {
-                            isSelectionMode = false
-                            selectedUris = emptySet()
-                        } else if (selectedImageUri != null) {
-                            // 如果正在查看圖片，只關閉圖片查看器
-                            selectedImageUri = null
-                        } else {
-                            // 否則返回首頁
-                            onBack()
+                        when {
+                            uiState.isSelectionMode -> viewModel.exitSelectionMode()
+                            uiState.viewerUri != null -> viewModel.closeViewer()
+                            else -> onBack()
                         }
                     }) {
                         Icon(
@@ -110,8 +98,8 @@ fun GalleryScreen(
                     }
                 },
                 actions = {
-                    if (isSelectionMode && selectedUris.isNotEmpty()) {
-                        IconButton(onClick = { deleteSelectedImages() }) {
+                    if (uiState.isSelectionMode && uiState.selectedUris.isNotEmpty()) {
+                        IconButton(onClick = { viewModel.deleteSelected() }) {
                             Icon(
                                 imageVector = Icons.Default.Delete,
                                 contentDescription = "刪除",
@@ -123,7 +111,7 @@ fun GalleryScreen(
             )
         }
     ) { paddingValues ->
-        if (imageUris.isEmpty()) {
+        if (uiState.images.isEmpty()) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -145,34 +133,27 @@ fun GalleryScreen(
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                items(imageUris) { uri ->
-                    val isSelected = selectedUris.contains(uri)
+                items(uiState.images) { uri ->
+                    val isSelected = uri in uiState.selectedUris
                     Box(
                         modifier = Modifier
                             .aspectRatio(1f)
                             .clip(RoundedCornerShape(8.dp))
-                            .pointerInput(uri, isSelectionMode) {
+                            .pointerInput(uri, uiState.isSelectionMode) {
                                 detectTapGestures(
                                     onTap = {
-                                        // 點擊處理
-                                        if (isSelectionMode) {
-                                            // 選擇模式下點擊切換選中狀態
-                                            selectedUris = if (isSelected) {
-                                                selectedUris - uri
-                                            } else {
-                                                selectedUris + uri
-                                            }
+                                        if (uiState.isSelectionMode) {
+                                            viewModel.toggleSelection(uri)
                                         } else {
-                                            // 普通模式下點擊查看大圖
-                                            selectedImageUri = uri
+                                            viewModel.openViewer(uri)
                                         }
                                     },
                                     onLongPress = {
-                                        // 長按進入選擇模式並勾選該圖片
-                                        if (!isSelectionMode) {
-                                            isSelectionMode = true
+                                        if (!uiState.isSelectionMode) {
+                                            viewModel.enterSelectionMode(uri)
+                                        } else {
+                                            viewModel.toggleSelection(uri)
                                         }
-                                        selectedUris = selectedUris + uri
                                     }
                                 )
                             }
@@ -183,7 +164,7 @@ fun GalleryScreen(
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop
                         )
-                        if (isSelectionMode) {
+                        if (uiState.isSelectionMode) {
                             Icon(
                                 imageVector = Icons.Default.CheckCircle,
                                 contentDescription = if (isSelected) "已選中" else "未選中",
@@ -203,11 +184,10 @@ fun GalleryScreen(
             }
         }
 
-        // 全屏圖片查看器
-        selectedImageUri?.let { uri ->
+        uiState.viewerUri?.let { uri ->
             ImageViewer(
                 imageUri = uri,
-                onClose = { selectedImageUri = null }
+                onClose = viewModel::closeViewer
             )
         }
     }
