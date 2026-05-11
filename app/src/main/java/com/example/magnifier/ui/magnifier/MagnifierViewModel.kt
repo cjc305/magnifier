@@ -8,12 +8,12 @@ import com.example.magnifier.data.media.MediaRepository
 import com.example.magnifier.data.permission.AppPermissions
 import com.example.magnifier.data.permission.PermissionGate
 import com.example.magnifier.ui.UiEvent
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -28,8 +28,8 @@ class MagnifierViewModel(
 
     val permissions: StateFlow<AppPermissions> = permissionGate.state
 
-    private val _events = MutableSharedFlow<UiEvent>(extraBufferCapacity = 4)
-    val events: SharedFlow<UiEvent> = _events.asSharedFlow()
+    private val _events = Channel<UiEvent>(Channel.BUFFERED)
+    val events: Flow<UiEvent> = _events.receiveAsFlow()
 
     fun setZoom(level: Float) {
         val clamped = level.coerceIn(1f, 10f)
@@ -50,14 +50,14 @@ class MagnifierViewModel(
                     mediaRepository.save(bitmap)
                         .onSuccess { uri ->
                             _uiState.update { it.copy(lastSavedImageUri = uri) }
-                            _events.emit(UiEvent.ShowToast("圖片已儲存到相簿"))
+                            _events.trySend(UiEvent.ShowToast("圖片已儲存到相簿"))
                         }
                         .onFailure {
-                            _events.emit(UiEvent.ShowToast("儲存失敗，請檢查權限"))
+                            _events.trySend(UiEvent.ShowToast("儲存失敗，請檢查權限"))
                         }
                 }
                 .onFailure { e ->
-                    _events.emit(UiEvent.ShowToast("拍照失敗: ${e.message}"))
+                    _events.trySend(UiEvent.ShowToast("拍照失敗: ${e.message}"))
                 }
         }
     }
