@@ -78,7 +78,7 @@ app/src/main/java/com/example/magnifier/
 - [x] AC-1: `MainActivity.kt` ≤ 50 行（只剩 Activity 殼）— **29 行** (commit 104f2e3)
 - [ ] AC-2: 每個拆出的 .kt ≤ 250 行 — **partial**：MagnifierScreen 293 / GalleryScreen 252 仍超出（pure-move 無法拆內部，待 MAG-A-002 / MAG-A-004 atomize）；其他 4 檔皆 ≤ 125 行
 - [x] AC-3: `./gradlew assembleDebug` 編譯通過 — **BUILD SUCCESSFUL in 6s** (2026-05-11)
-- [ ] AC-4: 手機跑 app，相機預覽 / zoom / 拍照 / 相簿 / 刪除 全部正常（與重構前一致）— **待用戶實機驗證**
+- [x] AC-4: 手機跑 app，相機預覽 / zoom / 拍照 / 相簿 / 刪除 全部正常 — 用戶 2026-05-11 smoke test 全綠
 - [ ] AC-5: `git diff --stat` 顯示新增檔案而非整檔重寫（保留 git blame 歷史）— **not used**：single-file → multi-file split 無法用 `git mv`，新檔 git blame 從零開始；用 commit message + audit 補償歷史
 
 ### Verification

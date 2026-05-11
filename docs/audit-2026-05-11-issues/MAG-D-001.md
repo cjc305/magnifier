@@ -63,7 +63,7 @@ $ grep -rn "accompanist\|rememberPermissionState\|rememberMultiplePermissionsSta
 - [x] AC-1: `app/build.gradle.kts` 移除 accompanist-permissions 行 (commit 978278a)
 - [x] AC-2: `./gradlew app:dependencies` 不再列出 accompanist-permissions（drawablepainter 是 Coil transitive，非本 issue scope）
 - [x] AC-3: `./gradlew assembleDebug` 編譯通過（BUILD SUCCESSFUL in 1m 10s, 2026-05-11）
-- [ ] AC-4: 實機跑 app，權限申請仍正常（**待用戶實機驗證**，自動化無法驗）
+- [x] AC-4: 實機跑 app，權限申請仍正常 — 用戶 2026-05-11 smoke test 全綠
 
 ### Verification
 

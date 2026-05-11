@@ -99,3 +99,4 @@ MAG-M-002 (Gradle submodule — 等 package 穩定 6 個月後再考慮)
 | 2026-05-11 | claude-opus-4.7 | MAG-D-001 done in commit 978278a — verified build (1m 10s) + dep tree clean; AC-4 awaits manual device test |
 | 2026-05-11 | claude-opus-4.7 | MAG-M-001 partial in commit 104f2e3 — MainActivity 891→29 lines, 6 new files; AC-2 awaits MAG-A-002/004 (MagnifierScreen 293 / GalleryScreen 252 exceed 250 target); AC-4 awaits manual device test |
 | 2026-05-11 | claude-opus-4.7 | MAG-D-002 done in commit 2d58cac — catalog migration; AC-1/2/3 ✅ (build 1m 2s, dep tree unchanged); AC-4 awaits manual device test |
+| 2026-05-11 | claude-opus-4.7 | user device smoke test all green — AC-4 marked done for MAG-D-001 / MAG-M-001 / MAG-D-002 |

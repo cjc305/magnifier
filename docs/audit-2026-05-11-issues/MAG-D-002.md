@@ -117,7 +117,7 @@ LINES: 1-29
 - [x] AC-1: `app/build.gradle.kts` 無任何 `implementation("group:name:version")` 字串字面量 — grep exit 1 (commit 2d58cac)
 - [x] AC-2: `gradle/libs.versions.toml` 含 camerax / coil / material-icons-extended 條目 — 8 個 catalog 項
 - [x] AC-3: `./gradlew assembleDebug` 編譯通過，依賴 resolve 結果與原版一致 — BUILD SUCCESSFUL in 1m 2s (2026-05-11)；dep tree 確認 CameraX 1.3.4 / Coil 2.5.0 / material-icons-extended 1.7.0 (BOM)
-- [ ] AC-4: 實機跑 app，相機 / Coil 載入縮圖 / Material icons 顯示全部正常 — **待用戶實機驗證**
+- [x] AC-4: 實機跑 app，相機 / Coil 載入縮圖 / Material icons 顯示全部正常 — 用戶 2026-05-11 smoke test 全綠
 
 ### Verification
 
