@@ -65,8 +65,12 @@ dependencies {
 
     // ListenableFuture.await() bridge for CameraX async APIs
     implementation(libs.androidx.concurrent.futures.ktx)
-    
+
+    // ViewModel + Compose integration
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
