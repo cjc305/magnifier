@@ -33,7 +33,7 @@ schema_version: 1
 | [MAG-A-002](audit-2026-05-11-issues/MAG-A-002.md) | p1 | not_started | claude | 2d | — | 拆 MagnifierScreen 為 atoms / molecules / organisms |
 | [MAG-A-003](audit-2026-05-11-issues/MAG-A-003.md) | p2 | done | claude | 0.5d | — | imageProxyToBitmap 拆 format-strategy（99fa6bb，6 unit tests pass）|
 | [MAG-A-004](audit-2026-05-11-issues/MAG-A-004.md) | p2 | not_started | claude | 1d | — | GalleryScreen 內含 grid / selection / viewer 三 mode → 拆 |
-| [MAG-API-001](audit-2026-05-11-issues/MAG-API-001.md) | p1 | not_started | claude | 1d | MAG-A-001 | `MediaRepository` 介面：MediaStore CRUD 包裝 |
+| [MAG-API-001](audit-2026-05-11-issues/MAG-API-001.md) | p1 | partial | claude | 1d | MAG-A-001 | `MediaRepository` 介面：MediaStore CRUD 包裝（0b2dd78）；AC-3 instrumented test deferred / AC-5 待 device |
 | [MAG-API-002](audit-2026-05-11-issues/MAG-API-002.md) | p1 | not_started | claude | 1d | MAG-A-001 | `CameraController` 介面：CameraX 生命週期 + zoom + torch |
 | [MAG-API-003](audit-2026-05-11-issues/MAG-API-003.md) | p2 | not_started | claude | 0.5d | — | `PermissionGate` 介面：權限申請流程抽象 |
 | [MAG-D-001](audit-2026-05-11-issues/MAG-D-001.md) | polish | done | claude | 0.1d | — | 移除未使用的 accompanist-permissions:0.34.0（978278a）|
@@ -101,3 +101,4 @@ MAG-M-002 (Gradle submodule — 等 package 穩定 6 個月後再考慮)
 | 2026-05-11 | claude-opus-4.7 | MAG-D-002 done in commit 2d58cac — catalog migration; AC-1/2/3 ✅ (build 1m 2s, dep tree unchanged); AC-4 awaits manual device test |
 | 2026-05-11 | claude-opus-4.7 | user device smoke test all green — AC-4 marked done for MAG-D-001 / MAG-M-001 / MAG-D-002 |
 | 2026-05-11 | claude-opus-4.7 | MAG-A-003 done in commit 99fa6bb — strategy pattern + 6 unit tests (tests=6 failures=0); AC-5 (capture flow) awaits next device smoke |
+| 2026-05-11 | claude-opus-4.7 | MAG-API-001 partial in commit 0b2dd78 — MediaRepository interface + MediaStoreMediaRepository impl (157 lines); MediaStoreSource.kt deleted; UI layer has 0 ContentResolver refs; AC-3 instrumented deferred, AC-5 awaits device smoke (coroutine wrapping + Result envelope + DeletionResult are new behavior points) |

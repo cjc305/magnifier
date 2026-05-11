@@ -2,7 +2,7 @@
 doc: magnifier/audit/2026-05-11/MAG-API-001
 title: MediaRepository 介面 — MediaStore CRUD 包裝
 created: 2026-05-11T00:00:00+08:00
-updated: 2026-05-11T00:00:00+08:00
+updated: 2026-05-11T16:00:00+08:00
 author: claude-opus-4.7
 schema_version: 1
 ---
@@ -12,12 +12,12 @@ schema_version: 1
 ```yaml
 id: MAG-API-001
 severity: p1
-status: not_started
+status: partial
 owner: claude
 eta_days: 1
 blocker_for: [MAG-A-001, MAG-A-004]
 discovered_via: MediaStore 三組操作（query / insert / delete）散在 MainActivity.kt 三處不同 function
-fixed_in: null
+fixed_in: 0b2dd78
 related: [MAG-A-001, MAG-A-004]
 ```
 
@@ -116,11 +116,11 @@ API 設計遵循 `~/.claude/rules/api-design.md`：
 
 ### Acceptance criteria
 
-- [ ] AC-1: `MediaRepository` interface 定義在 `data/media/` 下
-- [ ] AC-2: `MediaStoreMediaRepository` 實作所有方法，每個 method 不超過 40 行
-- [ ] AC-3: `MediaRepositoryTest` (instrumented，需 `androidTest`) 至少覆蓋：query 空清單 / save 一張圖回傳 URI / delete 不存在 URI 回 failed=1
-- [ ] AC-4: `MainActivity.kt` / `GalleryScreen.kt` 內無 `contentResolver.` 直接呼叫
-- [ ] AC-5: 實機跑 app，拍照 / 相簿 / 刪除全部正常
+- [x] AC-1: `MediaRepository` interface 定義在 `data/media/` 下 — MediaRepository.kt 18 行 (0b2dd78)
+- [x] AC-2: `MediaStoreMediaRepository` 實作所有方法 — 157 行；public method 均 < 40 行（query 35 / save 13 / delete 7；private helpers buildContentValues 8 / writeBitmap 19 / deleteOne 28）
+- [ ] AC-3: `MediaRepositoryTest` (instrumented，需 `androidTest`) — **deferred**：本機無 emulator，等需要時用 Android Studio 跑 `connectedDebugAndroidTest`
+- [x] AC-4: `MainActivity.kt` / 全 `ui/` 內無 `contentResolver.` 直接呼叫 — `grep contentResolver app/src/main/.../ui/ + MainActivity.kt` exit 1 (0 命中)
+- [ ] AC-5: 實機跑 app，拍照 / 相簿 / 刪除全部正常 — **待用戶實機驗證**（含 coroutine wrapping、save Result envelope、Set<Uri>-based DeletionResult 三個新行為點）
 
 ### Verification
 
