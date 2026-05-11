@@ -1,0 +1,81 @@
+# magnifier — LLM-friendly index
+
+> Android 放大鏡 App（CameraX 1.3.4 + Jetpack Compose + Material3）。
+> minSdk 24 / targetSdk 36 / Kotlin 2.0.21 / AGP 8.13.2。
+> 原 Cursor 開發，現轉 Claude Code 工作流。
+
+## Conventions
+
+- **ID format**: `MAG-{CATEGORY}-{NNN}`
+- **Repo root (absolute)**: `C:\Users\APK.TW_Tester\AndroidStudioProjects\magnifier`
+- **Category enum**:
+  - `M` — 模組化（Module / package boundary）
+  - `A` — 原子化（Atomicity / single-responsibility）
+  - `API` — 介面化（API contract / abstraction layer）
+  - `D` — 依賴化（Dependency / DI / version catalog）
+- **Severity enum**: `blocker | p1 | p2 | polish | process`
+- **Status enum**: `not_started | in_progress | partial | blocked | done | wont_fix | deferred | acknowledged`
+- **Schema**: `schema_version: 1`（per `~/.claude/rules/ai-friendly-docs.md`）
+- **Language**: zh-Hant primary, English keywords / code
+
+## Quick start for agents
+
+```bash
+# 1. 切到專案根
+cd "C:/Users/APK.TW_Tester/AndroidStudioProjects/magnifier"
+
+# 2. 看當前 open issues
+grep -hE "^\| \[?MAG-" docs/audit-2026-05-11-architecture.md \
+  | grep -E "not_started|in_progress|partial|blocked"
+
+# 3. 看特定 issue 完整內容
+cat docs/audit-2026-05-11-issues/MAG-M-001.md
+
+# 4. 看 MainActivity.kt（god file，本次 audit 主角）
+wc -l app/src/main/java/com/example/magnifier/MainActivity.kt   # 891 lines
+```
+
+## Indexed docs
+
+### Architecture audit (2026-05-11)
+
+- [audit-2026-05-11-architecture.md](audit-2026-05-11-architecture.md) — 模組化 / 原子化 / API化 / 依賴化 主 index（status table + TL;DR）
+
+### Per-issue blocks
+
+| ID | File | 主題 |
+|---|---|---|
+| MAG-M-001 | [audit-2026-05-11-issues/MAG-M-001.md](audit-2026-05-11-issues/MAG-M-001.md) | god-file split：MainActivity.kt 891 行拆 package-by-feature |
+| MAG-M-002 | [audit-2026-05-11-issues/MAG-M-002.md](audit-2026-05-11-issues/MAG-M-002.md) | Gradle 子模組評估：`:app` 單模組 vs `:core` + `:feature-*` |
+| MAG-A-001 | [audit-2026-05-11-issues/MAG-A-001.md](audit-2026-05-11-issues/MAG-A-001.md) | 抽 MagnifierViewModel：state holder 從 Composable 拉出 |
+| MAG-A-002 | [audit-2026-05-11-issues/MAG-A-002.md](audit-2026-05-11-issues/MAG-A-002.md) | 拆 MagnifierScreen 為 atoms / molecules / organisms |
+| MAG-A-003 | [audit-2026-05-11-issues/MAG-A-003.md](audit-2026-05-11-issues/MAG-A-003.md) | imageProxyToBitmap 拆 format-strategy（YUV / JPEG / fallback）|
+| MAG-A-004 | [audit-2026-05-11-issues/MAG-A-004.md](audit-2026-05-11-issues/MAG-A-004.md) | GalleryScreen 內含選擇 / 檢視 / 刪除三 mode → 拆 |
+| MAG-API-001 | [audit-2026-05-11-issues/MAG-API-001.md](audit-2026-05-11-issues/MAG-API-001.md) | `MediaRepository` 介面：MediaStore CRUD 包裝 |
+| MAG-API-002 | [audit-2026-05-11-issues/MAG-API-002.md](audit-2026-05-11-issues/MAG-API-002.md) | `CameraController` 介面：CameraX 生命週期 + zoom + torch |
+| MAG-API-003 | [audit-2026-05-11-issues/MAG-API-003.md](audit-2026-05-11-issues/MAG-API-003.md) | `PermissionGate` 介面：權限申請流程抽象 |
+| MAG-D-001 | [audit-2026-05-11-issues/MAG-D-001.md](audit-2026-05-11-issues/MAG-D-001.md) | 移除未使用的 accompanist-permissions:0.34.0 |
+| MAG-D-002 | [audit-2026-05-11-issues/MAG-D-002.md](audit-2026-05-11-issues/MAG-D-002.md) | CameraX / Coil hardcoded version → libs.versions.toml catalog |
+| MAG-D-003 | [audit-2026-05-11-issues/MAG-D-003.md](audit-2026-05-11-issues/MAG-D-003.md) | DI 框架評估：Hilt vs manual constructor injection |
+
+## Project facts (verified 2026-05-11)
+
+| 項目 | 值 | 驗證指令 |
+|---|---|---|
+| MainActivity.kt 行數 | 891 | `wc -l app/src/main/java/com/example/magnifier/MainActivity.kt` |
+| Compose BOM | 2024.09.00 | `grep composeBom gradle/libs.versions.toml` |
+| Kotlin | 2.0.21 | `grep '^kotlin' gradle/libs.versions.toml` |
+| AGP | 8.13.2 | `grep '^agp' gradle/libs.versions.toml` |
+| CameraX | 1.3.4 (hardcoded) | `grep cameraxVersion app/build.gradle.kts` |
+| Coil | 2.5.0 (hardcoded) | `grep 'coil-compose' app/build.gradle.kts` |
+| minSdk / targetSdk | 24 / 36 | `grep -E 'minSdk|targetSdk' app/build.gradle.kts` |
+| accompanist-permissions 引用 | 0 處 | `grep -rn 'accompanist\|rememberPermissionState' app/src/main/` |
+
+## Out of scope (這份 audit 不處理)
+
+- 功能新增 / bug 修復 — 本 audit 只談架構
+- UI 視覺重設計（顏色 / 字體 / 圖示）
+- 上架 / 商店設定 / 簽章
+- 翻譯 / i18n（目前 strings.xml 只有 `app_name`）
+
+新議題請另開 audit doc，**不要 append** 到 audit-2026-05-11。
