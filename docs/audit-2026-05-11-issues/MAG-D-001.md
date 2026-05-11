@@ -2,7 +2,7 @@
 doc: magnifier/audit/2026-05-11/MAG-D-001
 title: 移除未使用的 accompanist-permissions:0.34.0
 created: 2026-05-11T00:00:00+08:00
-updated: 2026-05-11T00:00:00+08:00
+updated: 2026-05-11T12:00:00+08:00
 author: claude-opus-4.7
 schema_version: 1
 ---
@@ -12,12 +12,12 @@ schema_version: 1
 ```yaml
 id: MAG-D-001
 severity: polish
-status: not_started
+status: done
 owner: claude
 eta_days: 0.1
 blocker_for: []
 discovered_via: grep 'accompanist\|rememberPermissionState' app/src/main → 0 matches
-fixed_in: null
+fixed_in: 978278a
 related: [MAG-API-003]
 ```
 
@@ -60,10 +60,10 @@ $ grep -rn "accompanist\|rememberPermissionState\|rememberMultiplePermissionsSta
 
 ### Acceptance criteria
 
-- [ ] AC-1: `app/build.gradle.kts` 移除 accompanist-permissions 行
-- [ ] AC-2: `./gradlew app:dependencies` 不再列出 accompanist-permissions
-- [ ] AC-3: `./gradlew assembleDebug` 編譯通過
-- [ ] AC-4: 實機跑 app，權限申請仍正常（既有 ActivityResultContracts 路徑不變）
+- [x] AC-1: `app/build.gradle.kts` 移除 accompanist-permissions 行 (commit 978278a)
+- [x] AC-2: `./gradlew app:dependencies` 不再列出 accompanist-permissions（drawablepainter 是 Coil transitive，非本 issue scope）
+- [x] AC-3: `./gradlew assembleDebug` 編譯通過（BUILD SUCCESSFUL in 1m 10s, 2026-05-11）
+- [ ] AC-4: 實機跑 app，權限申請仍正常（**待用戶實機驗證**，自動化無法驗）
 
 ### Verification
 

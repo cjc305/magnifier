@@ -2,7 +2,7 @@
 doc: magnifier/audit/2026-05-11/architecture
 title: Magnifier 架構 audit — 模組化 / 原子化 / API化 / 依賴化
 created: 2026-05-11T00:00:00+08:00
-updated: 2026-05-11T00:00:00+08:00
+updated: 2026-05-11T12:00:00+08:00
 author: claude-opus-4.7
 follows: null
 followed_by: null
@@ -36,7 +36,7 @@ schema_version: 1
 | [MAG-API-001](audit-2026-05-11-issues/MAG-API-001.md) | p1 | not_started | claude | 1d | MAG-A-001 | `MediaRepository` 介面：MediaStore CRUD 包裝 |
 | [MAG-API-002](audit-2026-05-11-issues/MAG-API-002.md) | p1 | not_started | claude | 1d | MAG-A-001 | `CameraController` 介面：CameraX 生命週期 + zoom + torch |
 | [MAG-API-003](audit-2026-05-11-issues/MAG-API-003.md) | p2 | not_started | claude | 0.5d | — | `PermissionGate` 介面：權限申請流程抽象 |
-| [MAG-D-001](audit-2026-05-11-issues/MAG-D-001.md) | polish | not_started | claude | 0.1d | — | 移除未使用的 accompanist-permissions:0.34.0 |
+| [MAG-D-001](audit-2026-05-11-issues/MAG-D-001.md) | polish | done | claude | 0.1d | — | 移除未使用的 accompanist-permissions:0.34.0（978278a）|
 | [MAG-D-002](audit-2026-05-11-issues/MAG-D-002.md) | polish | not_started | claude | 0.2d | — | CameraX / Coil hardcoded version → libs.versions.toml catalog |
 | [MAG-D-003](audit-2026-05-11-issues/MAG-D-003.md) | p2 | not_started | claude | 0.5d | MAG-API-* | DI 框架評估：Hilt vs manual constructor injection |
 
@@ -96,3 +96,4 @@ MAG-M-002 (Gradle submodule — 等 package 穩定 6 個月後再考慮)
 |---|---|---|
 | 2026-05-11 | claude-opus-4.7 | initial — 12 issues across M / A / API / D categories |
 | 2026-05-11 | claude-opus-4.7 | self-check pass — Step 1 ✅ (all files < 250 lines, frontmatter OK) / Step 2 ✅ (6-section matrix 12/12 issues all 1s) / Step 3 ⚠️ skipped (this machine has no python; spec-doctor.py needs to run on Mac Studio / MacBook Air via Chronicle sync) |
+| 2026-05-11 | claude-opus-4.7 | MAG-D-001 done in commit 978278a — verified build (1m 10s) + dep tree clean; AC-4 awaits manual device test |
