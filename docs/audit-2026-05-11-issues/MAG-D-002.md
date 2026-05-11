@@ -2,7 +2,7 @@
 doc: magnifier/audit/2026-05-11/MAG-D-002
 title: CameraX / Coil hardcoded version → libs.versions.toml catalog
 created: 2026-05-11T00:00:00+08:00
-updated: 2026-05-11T00:00:00+08:00
+updated: 2026-05-11T14:00:00+08:00
 author: claude-opus-4.7
 schema_version: 1
 ---
@@ -12,12 +12,12 @@ schema_version: 1
 ```yaml
 id: MAG-D-002
 severity: polish
-status: not_started
+status: done
 owner: claude
 eta_days: 0.2
 blocker_for: []
 discovered_via: app/build.gradle.kts L55-68 含 hardcoded "1.3.4" / "2.5.0" / "0.34.0" string literal
-fixed_in: null
+fixed_in: 2d58cac
 related: [MAG-D-001]
 ```
 
@@ -114,10 +114,10 @@ LINES: 1-29
 
 ### Acceptance criteria
 
-- [ ] AC-1: `app/build.gradle.kts` 無任何 `implementation("group:name:version")` 字串字面量（除 BOM `platform(...)` 已用 catalog）
-- [ ] AC-2: `gradle/libs.versions.toml` 含 camerax / coil / material-icons-extended 條目
-- [ ] AC-3: `./gradlew assembleDebug` 編譯通過，依賴 resolve 結果與原版一致
-- [ ] AC-4: 實機跑 app，相機 / Coil 載入縮圖 / Material icons 顯示全部正常
+- [x] AC-1: `app/build.gradle.kts` 無任何 `implementation("group:name:version")` 字串字面量 — grep exit 1 (commit 2d58cac)
+- [x] AC-2: `gradle/libs.versions.toml` 含 camerax / coil / material-icons-extended 條目 — 8 個 catalog 項
+- [x] AC-3: `./gradlew assembleDebug` 編譯通過，依賴 resolve 結果與原版一致 — BUILD SUCCESSFUL in 1m 2s (2026-05-11)；dep tree 確認 CameraX 1.3.4 / Coil 2.5.0 / material-icons-extended 1.7.0 (BOM)
+- [ ] AC-4: 實機跑 app，相機 / Coil 載入縮圖 / Material icons 顯示全部正常 — **待用戶實機驗證**
 
 ### Verification
 

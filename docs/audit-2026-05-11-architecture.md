@@ -37,7 +37,7 @@ schema_version: 1
 | [MAG-API-002](audit-2026-05-11-issues/MAG-API-002.md) | p1 | not_started | claude | 1d | MAG-A-001 | `CameraController` 介面：CameraX 生命週期 + zoom + torch |
 | [MAG-API-003](audit-2026-05-11-issues/MAG-API-003.md) | p2 | not_started | claude | 0.5d | — | `PermissionGate` 介面：權限申請流程抽象 |
 | [MAG-D-001](audit-2026-05-11-issues/MAG-D-001.md) | polish | done | claude | 0.1d | — | 移除未使用的 accompanist-permissions:0.34.0（978278a）|
-| [MAG-D-002](audit-2026-05-11-issues/MAG-D-002.md) | polish | not_started | claude | 0.2d | — | CameraX / Coil hardcoded version → libs.versions.toml catalog |
+| [MAG-D-002](audit-2026-05-11-issues/MAG-D-002.md) | polish | done | claude | 0.2d | — | CameraX / Coil hardcoded version → libs.versions.toml catalog（2d58cac）|
 | [MAG-D-003](audit-2026-05-11-issues/MAG-D-003.md) | p2 | not_started | claude | 0.5d | MAG-API-* | DI 框架評估：Hilt vs manual constructor injection |
 
 ```bash
@@ -98,3 +98,4 @@ MAG-M-002 (Gradle submodule — 等 package 穩定 6 個月後再考慮)
 | 2026-05-11 | claude-opus-4.7 | self-check pass — Step 1 ✅ (all files < 250 lines, frontmatter OK) / Step 2 ✅ (6-section matrix 12/12 issues all 1s) / Step 3 ⚠️ skipped (this machine has no python; spec-doctor.py needs to run on Mac Studio / MacBook Air via Chronicle sync) |
 | 2026-05-11 | claude-opus-4.7 | MAG-D-001 done in commit 978278a — verified build (1m 10s) + dep tree clean; AC-4 awaits manual device test |
 | 2026-05-11 | claude-opus-4.7 | MAG-M-001 partial in commit 104f2e3 — MainActivity 891→29 lines, 6 new files; AC-2 awaits MAG-A-002/004 (MagnifierScreen 293 / GalleryScreen 252 exceed 250 target); AC-4 awaits manual device test |
+| 2026-05-11 | claude-opus-4.7 | MAG-D-002 done in commit 2d58cac — catalog migration; AC-1/2/3 ✅ (build 1m 2s, dep tree unchanged); AC-4 awaits manual device test |
