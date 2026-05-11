@@ -43,7 +43,7 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import coil.compose.AsyncImage
-import com.example.magnifier.data.media.imageProxyToBitmap
+import com.example.magnifier.data.media.ImageDecoder
 import com.example.magnifier.data.media.queryMagnifierImages
 import com.example.magnifier.data.media.saveImageToGallery
 import com.example.magnifier.ui.camera.CameraPreview
@@ -198,7 +198,7 @@ fun MagnifierScreen() {
                                             object : ImageCapture.OnImageCapturedCallback() {
                                                 override fun onCaptureSuccess(image: androidx.camera.core.ImageProxy) {
                                                     try {
-                                                        val bitmap = imageProxyToBitmap(image)
+                                                        val bitmap = ImageDecoder.decode(image)
                                                         val savedUri: Uri? = saveImageToGallery(context, bitmap)
                                                         if (savedUri != null) {
                                                             lastSavedImageUri = savedUri
