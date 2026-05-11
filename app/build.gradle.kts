@@ -61,9 +61,6 @@ dependencies {
     // Material Icons Extended (版本由 Compose BOM 管理)
     implementation("androidx.compose.material:material-icons-extended")
     
-    // Permission handling
-    implementation("com.google.accompanist:accompanist-permissions:0.34.0")
-
     // Coil for image loading
     implementation("io.coil-kt:coil-compose:2.5.0")
     
