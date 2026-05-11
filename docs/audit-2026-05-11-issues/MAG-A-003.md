@@ -92,7 +92,7 @@ object ImageDecoder {
 - [x] AC-2: 每個 strategy 的 `decode` 函數 ≤ 20 行 — Yuv 18 行 / Jpeg 4 行 / Fallback 6 行
 - [x] AC-3: `ImageDecoderTest` 覆蓋 YUV / JPEG / fallback / unsupported — **6 cases 全綠**（tests=6, failures=0, errors=0；包含 JPEG-with-3-planes 防誤判 yuv 的迴歸 case）
 - [x] AC-4: `imageProxyToBitmap` 已移除 — grep `fun imageProxyToBitmap` 全 src/main 0 命中（MAG-M-001 已搬到 ImageDecoder.kt，本 issue 一併重命名為 `ImageDecoder.decode`）
-- [ ] AC-5: 實機拍照功能不變（仍能存到相簿）— **待用戶實機驗證**（JVM 單測無法 cover Android `BitmapFactory` / `YuvImage` 真實呼叫）
+- [x] AC-5: 實機拍照功能不變（仍能存到相簿）— 用戶 2026-05-11 smoke test 全綠（同 commit 一起驗 MAG-API-001 capture+save 流程）
 
 ### Verification
 

@@ -31,9 +31,9 @@ schema_version: 1
 | [MAG-M-002](audit-2026-05-11-issues/MAG-M-002.md) | p2 | not_started | claude | 1d | — | Gradle 子模組評估：`:app` vs `:core` + `:feature-*` |
 | [MAG-A-001](audit-2026-05-11-issues/MAG-A-001.md) | p1 | not_started | claude | 1d | MAG-API-* | 抽 MagnifierViewModel：state holder 從 Composable 拉出 |
 | [MAG-A-002](audit-2026-05-11-issues/MAG-A-002.md) | p1 | not_started | claude | 2d | — | 拆 MagnifierScreen 為 atoms / molecules / organisms |
-| [MAG-A-003](audit-2026-05-11-issues/MAG-A-003.md) | p2 | done | claude | 0.5d | — | imageProxyToBitmap 拆 format-strategy（99fa6bb，6 unit tests pass）|
+| [MAG-A-003](audit-2026-05-11-issues/MAG-A-003.md) | p2 | done | claude | 0.5d | — | imageProxyToBitmap 拆 format-strategy（99fa6bb，6 unit tests pass，device smoke green）|
 | [MAG-A-004](audit-2026-05-11-issues/MAG-A-004.md) | p2 | not_started | claude | 1d | — | GalleryScreen 內含 grid / selection / viewer 三 mode → 拆 |
-| [MAG-API-001](audit-2026-05-11-issues/MAG-API-001.md) | p1 | partial | claude | 1d | MAG-A-001 | `MediaRepository` 介面：MediaStore CRUD 包裝（0b2dd78）；AC-3 instrumented test deferred / AC-5 待 device |
+| [MAG-API-001](audit-2026-05-11-issues/MAG-API-001.md) | p1 | partial | claude | 1d | MAG-A-001 | `MediaRepository` 介面：MediaStore CRUD 包裝（0b2dd78，device smoke green）；AC-3 instrumented test deferred |
 | [MAG-API-002](audit-2026-05-11-issues/MAG-API-002.md) | p1 | not_started | claude | 1d | MAG-A-001 | `CameraController` 介面：CameraX 生命週期 + zoom + torch |
 | [MAG-API-003](audit-2026-05-11-issues/MAG-API-003.md) | p2 | not_started | claude | 0.5d | — | `PermissionGate` 介面：權限申請流程抽象 |
 | [MAG-D-001](audit-2026-05-11-issues/MAG-D-001.md) | polish | done | claude | 0.1d | — | 移除未使用的 accompanist-permissions:0.34.0（978278a）|

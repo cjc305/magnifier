@@ -120,7 +120,7 @@ API 設計遵循 `~/.claude/rules/api-design.md`：
 - [x] AC-2: `MediaStoreMediaRepository` 實作所有方法 — 157 行；public method 均 < 40 行（query 35 / save 13 / delete 7；private helpers buildContentValues 8 / writeBitmap 19 / deleteOne 28）
 - [ ] AC-3: `MediaRepositoryTest` (instrumented，需 `androidTest`) — **deferred**：本機無 emulator，等需要時用 Android Studio 跑 `connectedDebugAndroidTest`
 - [x] AC-4: `MainActivity.kt` / 全 `ui/` 內無 `contentResolver.` 直接呼叫 — `grep contentResolver app/src/main/.../ui/ + MainActivity.kt` exit 1 (0 命中)
-- [ ] AC-5: 實機跑 app，拍照 / 相簿 / 刪除全部正常 — **待用戶實機驗證**（含 coroutine wrapping、save Result envelope、Set<Uri>-based DeletionResult 三個新行為點）
+- [x] AC-5: 實機跑 app，拍照 / 相簿 / 刪除全部正常 — 用戶 2026-05-11 smoke test 全綠（含 coroutine wrapping、save Result envelope、Set<Uri>-based DeletionResult 三個新行為點）
 
 ### Verification
 
