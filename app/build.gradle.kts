@@ -62,6 +62,9 @@ dependencies {
 
     // Coil for image loading
     implementation(libs.coil.compose)
+
+    // ListenableFuture.await() bridge for CameraX async APIs
+    implementation(libs.androidx.concurrent.futures.ktx)
     
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
