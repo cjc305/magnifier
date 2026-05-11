@@ -27,7 +27,7 @@ schema_version: 1
 
 | ID | severity | status | owner | eta | blocker_for | summary |
 |---|---|---|---|---|---|---|
-| [MAG-M-001](audit-2026-05-11-issues/MAG-M-001.md) | p1 | not_started | claude | 1d | MAG-A-*, MAG-API-* | god-file split：MainActivity.kt 891 行拆 package-by-feature |
+| [MAG-M-001](audit-2026-05-11-issues/MAG-M-001.md) | p1 | partial | claude | 1d | MAG-A-*, MAG-API-* | god-file split：MainActivity.kt 891→29 行（104f2e3），AC-2 待 MAG-A-002/004 atomize |
 | [MAG-M-002](audit-2026-05-11-issues/MAG-M-002.md) | p2 | not_started | claude | 1d | — | Gradle 子模組評估：`:app` vs `:core` + `:feature-*` |
 | [MAG-A-001](audit-2026-05-11-issues/MAG-A-001.md) | p1 | not_started | claude | 1d | MAG-API-* | 抽 MagnifierViewModel：state holder 從 Composable 拉出 |
 | [MAG-A-002](audit-2026-05-11-issues/MAG-A-002.md) | p1 | not_started | claude | 2d | — | 拆 MagnifierScreen 為 atoms / molecules / organisms |
@@ -97,3 +97,4 @@ MAG-M-002 (Gradle submodule — 等 package 穩定 6 個月後再考慮)
 | 2026-05-11 | claude-opus-4.7 | initial — 12 issues across M / A / API / D categories |
 | 2026-05-11 | claude-opus-4.7 | self-check pass — Step 1 ✅ (all files < 250 lines, frontmatter OK) / Step 2 ✅ (6-section matrix 12/12 issues all 1s) / Step 3 ⚠️ skipped (this machine has no python; spec-doctor.py needs to run on Mac Studio / MacBook Air via Chronicle sync) |
 | 2026-05-11 | claude-opus-4.7 | MAG-D-001 done in commit 978278a — verified build (1m 10s) + dep tree clean; AC-4 awaits manual device test |
+| 2026-05-11 | claude-opus-4.7 | MAG-M-001 partial in commit 104f2e3 — MainActivity 891→29 lines, 6 new files; AC-2 awaits MAG-A-002/004 (MagnifierScreen 293 / GalleryScreen 252 exceed 250 target); AC-4 awaits manual device test |

@@ -2,7 +2,7 @@
 doc: magnifier/audit/2026-05-11/MAG-M-001
 title: god-file split — MainActivity.kt 891 行拆 package-by-feature
 created: 2026-05-11T00:00:00+08:00
-updated: 2026-05-11T00:00:00+08:00
+updated: 2026-05-11T13:00:00+08:00
 author: claude-opus-4.7
 schema_version: 1
 ---
@@ -12,12 +12,12 @@ schema_version: 1
 ```yaml
 id: MAG-M-001
 severity: p1
-status: not_started
+status: partial
 owner: claude
 eta_days: 1
 blocker_for: [MAG-A-001, MAG-A-002, MAG-A-003, MAG-A-004, MAG-API-001, MAG-API-002, MAG-API-003]
 discovered_via: wc -l MainActivity.kt → 891 行
-fixed_in: null
+fixed_in: 104f2e3
 related: [MAG-M-002]
 ```
 
@@ -75,11 +75,11 @@ app/src/main/java/com/example/magnifier/
 
 ### Acceptance criteria
 
-- [ ] AC-1: `MainActivity.kt` ≤ 50 行（只剩 Activity 殼）
-- [ ] AC-2: 每個拆出的 .kt ≤ 250 行
-- [ ] AC-3: `./gradlew assembleDebug` 編譯通過
-- [ ] AC-4: 手機跑 app，相機預覽 / zoom / 拍照 / 相簿 / 刪除 全部正常（與重構前一致）
-- [ ] AC-5: `git diff --stat` 顯示新增檔案而非整檔重寫（保留 git blame 歷史）
+- [x] AC-1: `MainActivity.kt` ≤ 50 行（只剩 Activity 殼）— **29 行** (commit 104f2e3)
+- [ ] AC-2: 每個拆出的 .kt ≤ 250 行 — **partial**：MagnifierScreen 293 / GalleryScreen 252 仍超出（pure-move 無法拆內部，待 MAG-A-002 / MAG-A-004 atomize）；其他 4 檔皆 ≤ 125 行
+- [x] AC-3: `./gradlew assembleDebug` 編譯通過 — **BUILD SUCCESSFUL in 6s** (2026-05-11)
+- [ ] AC-4: 手機跑 app，相機預覽 / zoom / 拍照 / 相簿 / 刪除 全部正常（與重構前一致）— **待用戶實機驗證**
+- [ ] AC-5: `git diff --stat` 顯示新增檔案而非整檔重寫（保留 git blame 歷史）— **not used**：single-file → multi-file split 無法用 `git mv`，新檔 git blame 從零開始；用 commit message + audit 補償歷史
 
 ### Verification
 
