@@ -2,7 +2,7 @@
 doc: magnifier/audit/2026-05-11/MAG-API-003
 title: PermissionGate 介面 — 權限申請流程抽象
 created: 2026-05-11T00:00:00+08:00
-updated: 2026-05-11T00:00:00+08:00
+updated: 2026-05-11T18:00:00+08:00
 author: claude-opus-4.7
 schema_version: 1
 ---
@@ -12,12 +12,12 @@ schema_version: 1
 ```yaml
 id: MAG-API-003
 severity: p2
-status: not_started
+status: partial
 owner: claude
 eta_days: 0.5
 blocker_for: []
 discovered_via: rememberLauncherForActivityResult + Build.VERSION_CODES.TIRAMISU 判斷 inline 在 MagnifierScreen
-fixed_in: null
+fixed_in: 93b04de
 related: [MAG-A-001, MAG-D-001]
 ```
 
@@ -146,11 +146,11 @@ fun PermissionAwareContent(
 
 ### Acceptance criteria
 
-- [ ] AC-1: `PermissionGate` interface 與 `AndroidPermissionGate` impl 分離
-- [ ] AC-2: API_LEVEL 判斷集中在 `buildRequestList()` / `mediaPermissions()`，UI 層 0 個 `Build.VERSION` 判斷
-- [ ] AC-3: 有「永久拒絕」狀態，UI 顯示「請到設定開啟權限」連結
-- [ ] AC-4: Composable 內無 `rememberLauncherForActivityResult` 直接宣告（移到 ViewModel / Gate）
-- [ ] AC-5: 手動測試三 case：首次授權 / 拒絕一次 / 永久拒絕
+- [x] AC-1: `PermissionGate` interface 與 `AndroidPermissionGate` impl 分離 — PermissionGate.kt (33) + AndroidPermissionGate.kt (78) (93b04de)
+- [x] AC-2: API_LEVEL 判斷集中在 `mediaPermissions()`，UI 層 0 個 `Build.VERSION` 判斷 — `grep Build.VERSION app/src/main/.../ui/magnifier/MagnifierScreen.kt` exit 1
+- [ ] AC-3: 有「永久拒絕」狀態，UI 顯示「請到設定開啟權限」連結 — **deferred**：需 Activity ref 才能正確偵測 `shouldShowRequestPermissionRationale`；MVP 跳過，留 follow-up
+- [ ] AC-4: Composable 內無 `rememberLauncherForActivityResult` 直接宣告 — **partial / by design**：launcher 仍在 MagnifierScreen 用 Compose 慣用 `rememberLauncherForActivityResult` 取得，callback 內呼叫 `gate.onCameraResult` / `gate.onMediaResult`；要把 launcher 也搬走需要將 ViewModel + ActivityResultRegistry 自行包，等 MAG-A-001 引入 ViewModel 再評估
+- [ ] AC-5: 手動測試三 case：首次授權 / 拒絕一次 / 永久拒絕 — **partial**：實機 smoke（MAG-API-002 期間）已驗證首次授權；拒絕 / 永久拒絕 case 待 MAG-API-003 AC-3 實作後一併驗
 
 ### Verification
 
