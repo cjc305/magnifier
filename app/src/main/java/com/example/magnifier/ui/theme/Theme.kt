@@ -1,58 +1,57 @@
 package com.example.magnifier.ui.theme
 
-import android.app.Activity
-import android.os.Build
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.CompositionLocalProvider
 
-private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
-)
+// v1 ships with the Noir / Amber palette only — single dark theme that
+// pairs with the amber launcher icon for end-to-end brand cohesion and
+// matches the dark-camera-UI convention (Apple Camera, Google Camera).
+//
+// Dynamic Color is intentionally disabled: on Android 12+ it would let the
+// user's wallpaper override our Amber primary, breaking the brand link
+// between launcher icon and in-app UI.
+//
+// v1.1 may add a light variant for bright-environment accessibility.
 
-private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+private val NoirColorScheme = darkColorScheme(
+    primary             = NoirPalette.Primary,
+    onPrimary           = NoirPalette.OnPrimary,
+    primaryContainer    = NoirPalette.PrimaryContainer,
+    onPrimaryContainer  = NoirPalette.OnPrimaryContainer,
+    secondary           = NoirPalette.Secondary,
+    onSecondary         = NoirPalette.OnSecondary,
+    secondaryContainer  = NoirPalette.SecondaryContainer,
+    onSecondaryContainer = NoirPalette.OnSecondaryContainer,
+    tertiary            = NoirPalette.Secondary,
+    background          = NoirPalette.Bg,
+    onBackground        = NoirPalette.OnSurface,
+    surface             = NoirPalette.Surface,
+    onSurface           = NoirPalette.OnSurface,
+    surfaceVariant      = NoirPalette.SurfaceContainer,
+    onSurfaceVariant    = NoirPalette.OnSurfaceMuted,
+    surfaceContainer    = NoirPalette.SurfaceContainer,
+    surfaceContainerHigh = NoirPalette.SurfaceContainerHigh,
+    outline             = NoirPalette.Outline,
+    outlineVariant      = NoirPalette.OutlineVariant,
+    error               = NoirPalette.Error,
+    onError             = NoirPalette.OnError,
+    errorContainer      = NoirPalette.ErrorContainer,
+    onErrorContainer    = NoirPalette.OnErrorContainer,
+    scrim               = NoirPalette.Scrim,
 )
 
 @Composable
 fun MagnifierTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+    CompositionLocalProvider(LocalSpacing provides Spacing()) {
+        MaterialTheme(
+            colorScheme = NoirColorScheme,
+            typography  = MagnifierTypography,
+            shapes      = MagnifierShapes,
+            content     = content,
+        )
     }
-
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
-    )
 }
