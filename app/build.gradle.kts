@@ -11,7 +11,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.magnifier"
+        applicationId = "io.github.cjc305.magnifier"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
