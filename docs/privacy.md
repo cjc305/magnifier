@@ -70,8 +70,9 @@ layout: default
 
 ## 聯絡
 
-- GitHub Issues:<https://github.com/cjc305/magnifier/issues>
-- Email:`<請改成你的公開聯絡 email>`
+請透過 GitHub Issues 回報任何問題、bug 或隱私疑慮:
+
+- <https://github.com/cjc305/magnifier/issues>
 
 ---
 
@@ -142,5 +143,6 @@ If the App ever adds features that upload data, integrate third-party SDKs, or c
 
 ## Contact
 
-- GitHub Issues: <https://github.com/cjc305/magnifier/issues>
-- Email: `<please replace with your public contact email>`
+Please report any issue, bug, or privacy concern via GitHub Issues:
+
+- <https://github.com/cjc305/magnifier/issues>
