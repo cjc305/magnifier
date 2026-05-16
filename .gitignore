@@ -13,3 +13,8 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Play release signing — never commit
+keystore.properties
+*.jks
+*.keystore
