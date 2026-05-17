@@ -3,7 +3,15 @@ package com.example.magnifier.ui.magnifier
 import android.Manifest
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,6 +24,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.FlashOn
@@ -37,6 +46,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
@@ -54,7 +65,6 @@ import com.example.magnifier.ui.theme.NoirPalette
 @Composable
 fun MagnifierScreen() {
     val context = LocalContext.current
-    val spacing = LocalSpacing.current
     val app = context.applicationContext as MagnifierApplication
     val container = app.container
 
@@ -95,74 +105,124 @@ fun MagnifierScreen() {
         mediaPermissionLauncher.launch(viewModel.mediaPermissionList().toTypedArray())
     }
 
-    if (uiState.showGallery) {
-        GalleryScreen(
-            mediaRepository = container.mediaRepository,
-            onBack = {
-                viewModel.showGallery(false)
-                viewModel.onGalleryReturn()
-            },
-            onImagesDeleted = { uris -> viewModel.onImagesDeleted(uris) },
-        )
-    } else {
-        Scaffold(modifier = Modifier.fillMaxSize()) { paddingValues ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-            ) {
-                if (permissions.cameraGranted) {
-                    CameraPreview(
-                        controller = container.cameraController,
-                        modifier = Modifier.fillMaxSize(),
-                    )
+    // Soft crossfade between camera surface and gallery — no hard cut.
+    Crossfade(
+        targetState = uiState.showGallery,
+        animationSpec = tween(durationMillis = 280),
+        label = "magnifier-gallery-crossfade",
+    ) { showGallery ->
+        if (showGallery) {
+            GalleryScreen(
+                mediaRepository = container.mediaRepository,
+                onBack = {
+                    viewModel.showGallery(false)
+                    viewModel.onGalleryReturn()
+                },
+                onImagesDeleted = { uris -> viewModel.onImagesDeleted(uris) },
+            )
+        } else {
+            CameraView(
+                cameraGranted = permissions.cameraGranted,
+                uiState = uiState,
+                onZoomChange = viewModel::setZoom,
+                onToggleFlash = viewModel::toggleFlash,
+                onCapture = viewModel::capture,
+                onOpenGallery = { viewModel.showGallery(true) },
+                container = container,
+            )
+        }
+    }
+}
 
-                    // Bottom gradient overlay — transparent at top, amber-tinted
-                    // near-black at bottom. Makes controls legible over varying
-                    // camera content without obscuring the subject.
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .fillMaxWidth()
-                            .height(280.dp)
-                            .background(
-                                Brush.verticalGradient(
-                                    colors = listOf(
-                                        NoirPalette.ControlBarTop,
-                                        NoirPalette.ControlBarBottom,
-                                    )
-                                )
-                            )
-                    )
+@Composable
+private fun CameraView(
+    cameraGranted: Boolean,
+    uiState: MagnifierUiState,
+    onZoomChange: (Float) -> Unit,
+    onToggleFlash: () -> Unit,
+    onCapture: () -> Unit,
+    onOpenGallery: () -> Unit,
+    container: com.example.magnifier.di.AppContainer,
+) {
+    Scaffold(modifier = Modifier.fillMaxSize()) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            if (cameraGranted) {
+                CameraPreview(
+                    controller = container.cameraController,
+                    modifier = Modifier.fillMaxSize(),
+                )
 
-                    Column(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .fillMaxWidth()
-                            .padding(
-                                horizontal = spacing.xl,
-                                vertical = spacing.xxl,
-                            ),
-                        verticalArrangement = Arrangement.spacedBy(spacing.lg)
-                    ) {
-                        ZoomReadout(
-                            zoom = uiState.zoomLevel,
-                            onZoomChange = viewModel::setZoom,
-                        )
-
-                        ControlRow(
-                            isFlashOn = uiState.isFlashOn,
-                            lastSavedImageUri = uiState.lastSavedImageUri,
-                            onToggleFlash = viewModel::toggleFlash,
-                            onCapture = viewModel::capture,
-                            onOpenGallery = { viewModel.showGallery(true) },
-                        )
-                    }
-                } else {
-                    PermissionEmptyState()
-                }
+                FloatingControlCapsule(
+                    zoom = uiState.zoomLevel,
+                    isFlashOn = uiState.isFlashOn,
+                    lastSavedImageUri = uiState.lastSavedImageUri,
+                    onZoomChange = onZoomChange,
+                    onToggleFlash = onToggleFlash,
+                    onCapture = onCapture,
+                    onOpenGallery = onOpenGallery,
+                    modifier = Modifier.align(Alignment.BottomCenter),
+                )
+            } else {
+                PermissionEmptyState()
             }
         }
+    }
+}
+
+// Floating glass capsule — replaces the edge-to-edge gradient overlay.
+// Liquid-glass approximation via layered translucent fills + subtle border,
+// since true backdrop blur (RenderEffect) only exists on API 31+ and we
+// need to support API 24+. The amber-tinted inner gradient gives a sense
+// of warm ambient light without expensive GPU blur.
+@Composable
+private fun FloatingControlCapsule(
+    zoom: Float,
+    isFlashOn: Boolean,
+    lastSavedImageUri: android.net.Uri?,
+    onZoomChange: (Float) -> Unit,
+    onToggleFlash: () -> Unit,
+    onCapture: () -> Unit,
+    onOpenGallery: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val spacing = LocalSpacing.current
+    val capsuleShape = RoundedCornerShape(spacing.xxxl)
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = spacing.lg, vertical = spacing.xxl)
+            .shadow(elevation = 16.dp, shape = capsuleShape, clip = false)
+            .clip(capsuleShape)
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        NoirPalette.SurfaceContainerHigh.copy(alpha = 0.88f),
+                        NoirPalette.SurfaceContainer.copy(alpha = 0.92f),
+                    )
+                ),
+                shape = capsuleShape,
+            )
+            .border(
+                width = 0.5.dp,
+                color = NoirPalette.Outline.copy(alpha = 0.6f),
+                shape = capsuleShape,
+            )
+            .padding(horizontal = spacing.xl, vertical = spacing.lg),
+        verticalArrangement = Arrangement.spacedBy(spacing.md),
+    ) {
+        ZoomReadout(zoom = zoom, onZoomChange = onZoomChange)
+        ControlRow(
+            isFlashOn = isFlashOn,
+            lastSavedImageUri = lastSavedImageUri,
+            onToggleFlash = onToggleFlash,
+            onCapture = onCapture,
+            onOpenGallery = onOpenGallery,
+        )
     }
 }
 
@@ -206,7 +266,10 @@ private fun ZoomReadout(
             ),
             modifier = Modifier
                 .fillMaxWidth()
-                .semantics { contentDescription = "放大倍率,目前 ${"%.1f".format(zoom)} 倍,範圍 1 到 10 倍" },
+                .semantics {
+                    contentDescription =
+                        "放大倍率,目前 ${"%.1f".format(zoom)} 倍,範圍 1 到 10 倍"
+                },
         )
     }
 }
@@ -222,9 +285,8 @@ private fun ControlRow(
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Flash toggle — 48dp min hit area, amber when on
         IconButton(
             onClick = onToggleFlash,
             modifier = Modifier.size(56.dp),
@@ -238,24 +300,8 @@ private fun ControlRow(
             )
         }
 
-        // Capture — primary action, larger filled circle with amber background
-        FilledIconButton(
-            onClick = onCapture,
-            modifier = Modifier.size(72.dp),
-            shape = CircleShape,
-            colors = IconButtonDefaults.filledIconButtonColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-            ),
-        ) {
-            Icon(
-                imageVector = Icons.Default.CameraAlt,
-                contentDescription = "拍照儲存",
-                modifier = Modifier.size(32.dp),
-            )
-        }
+        CaptureFab(onCapture = onCapture)
 
-        // Gallery — last-saved thumbnail in a circle, or photo library icon
         if (lastSavedImageUri != null) {
             IconButton(
                 onClick = onOpenGallery,
@@ -282,6 +328,47 @@ private fun ControlRow(
                 )
             }
         }
+    }
+}
+
+// Primary action — spring press feedback, amber-tinted shadow glow.
+// NoBouncy damping keeps it premium-utility, not toy-bouncy.
+@Composable
+private fun CaptureFab(onCapture: () -> Unit) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.92f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioNoBouncy,
+            stiffness = Spring.StiffnessMedium,
+        ),
+        label = "capture-press-scale",
+    )
+
+    FilledIconButton(
+        onClick = onCapture,
+        interactionSource = interactionSource,
+        modifier = Modifier
+            .size(72.dp)
+            .scale(scale)
+            .shadow(
+                elevation = 12.dp,
+                shape = CircleShape,
+                ambientColor = NoirPalette.Shadow,
+                spotColor = NoirPalette.Shadow,
+            ),
+        shape = CircleShape,
+        colors = IconButtonDefaults.filledIconButtonColors(
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
+        ),
+    ) {
+        Icon(
+            imageVector = Icons.Default.CameraAlt,
+            contentDescription = "拍照儲存",
+            modifier = Modifier.size(32.dp),
+        )
     }
 }
 
