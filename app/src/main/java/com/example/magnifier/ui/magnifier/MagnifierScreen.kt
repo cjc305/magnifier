@@ -158,6 +158,7 @@ private fun CameraView(
 
                 FloatingControlCapsule(
                     zoom = uiState.zoomLevel,
+                    maxZoom = uiState.maxZoom,
                     isFlashOn = uiState.isFlashOn,
                     lastSavedImageUri = uiState.lastSavedImageUri,
                     onZoomChange = onZoomChange,
@@ -181,6 +182,7 @@ private fun CameraView(
 @Composable
 private fun FloatingControlCapsule(
     zoom: Float,
+    maxZoom: Float,
     isFlashOn: Boolean,
     lastSavedImageUri: android.net.Uri?,
     onZoomChange: (Float) -> Unit,
@@ -216,7 +218,7 @@ private fun FloatingControlCapsule(
             .padding(horizontal = spacing.xl, vertical = spacing.lg),
         verticalArrangement = Arrangement.spacedBy(spacing.md),
     ) {
-        ZoomReadout(zoom = zoom, onZoomChange = onZoomChange)
+        ZoomReadout(zoom = zoom, maxZoom = maxZoom, onZoomChange = onZoomChange)
         ControlRow(
             isFlashOn = isFlashOn,
             lastSavedImageUri = lastSavedImageUri,
@@ -230,9 +232,15 @@ private fun FloatingControlCapsule(
 @Composable
 private fun ZoomReadout(
     zoom: Float,
+    maxZoom: Float,
     onZoomChange: (Float) -> Unit,
 ) {
     val spacing = LocalSpacing.current
+    // 0.5× increments — chunky enough to drag accurately on a small phone,
+    // precise enough for utility. Floor and clamp so we never request a
+    // negative step count when maxZoom is at the fallback 1f.
+    val sliderSteps = ((maxZoom - 1f) * 2f - 1f).toInt().coerceAtLeast(0)
+    val effectiveMax = maxZoom.coerceAtLeast(1.5f)
     Column {
         Row(verticalAlignment = Alignment.Bottom) {
             Text(
@@ -249,17 +257,17 @@ private fun ZoomReadout(
             )
             Spacer(Modifier.weight(1f))
             Text(
-                text = "ZOOM",
+                text = "MAX %.1f×".format(effectiveMax),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = spacing.sm),
             )
         }
         Slider(
-            value = zoom,
+            value = zoom.coerceIn(1f, effectiveMax),
             onValueChange = onZoomChange,
-            valueRange = 1f..10f,
-            steps = 89,
+            valueRange = 1f..effectiveMax,
+            steps = sliderSteps,
             colors = SliderDefaults.colors(
                 thumbColor = MaterialTheme.colorScheme.primary,
                 activeTrackColor = MaterialTheme.colorScheme.primary,
@@ -269,7 +277,8 @@ private fun ZoomReadout(
                 .fillMaxWidth()
                 .semantics {
                     contentDescription =
-                        "放大倍率,目前 ${"%.1f".format(zoom)} 倍,範圍 1 到 10 倍"
+                        "放大倍率,目前 ${"%.1f".format(zoom)} 倍," +
+                                "範圍 1 到 ${"%.1f".format(effectiveMax)} 倍"
                 },
         )
     }

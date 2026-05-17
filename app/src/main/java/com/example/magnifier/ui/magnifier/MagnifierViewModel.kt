@@ -31,8 +31,28 @@ class MagnifierViewModel(
     private val _events = Channel<UiEvent>(Channel.BUFFERED)
     val events: Flow<UiEvent> = _events.receiveAsFlow()
 
+    init {
+        // Follow the camera's reported max zoom. Clamps the current
+        // zoomLevel down if the new max is lower than the previously
+        // selected value (e.g. on first bind when fallback was higher).
+        viewModelScope.launch {
+            cameraController.maxZoomRatio.collect { max ->
+                _uiState.update {
+                    it.copy(
+                        maxZoom = max,
+                        zoomLevel = it.zoomLevel.coerceIn(1f, max),
+                    )
+                }
+            }
+        }
+    }
+
     fun setZoom(level: Float) {
-        val clamped = level.coerceIn(1f, 10f)
+        // Read max directly from controller — uiState.maxZoom is updated
+        // asynchronously via the init { collect } block, which may not
+        // have run yet on the first setZoom call after construction.
+        val max = cameraController.maxZoomRatio.value
+        val clamped = level.coerceIn(1f, max)
         _uiState.update { it.copy(zoomLevel = clamped) }
         cameraController.setZoom(clamped)
     }

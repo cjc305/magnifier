@@ -15,11 +15,20 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import com.example.magnifier.data.media.ImageDecoder
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.util.concurrent.Executor
 import kotlin.coroutines.resume
 
 private const val TAG = "CameraXController"
+
+// Fallback used until bind() reads the real maxZoomRatio from cameraInfo.
+// Most devices' main back camera reports 1.0–4.0; ultra-wide phones go
+// higher. Sending setZoomRatio() above the device max is silently dropped
+// by CameraX — hence we MUST clamp to this dynamic value in the UI.
+private const val FALLBACK_MAX_ZOOM = 4f
 
 class CameraXController(
     private val context: Context,
@@ -31,6 +40,9 @@ class CameraXController(
     private val imageCapture: ImageCapture = ImageCapture.Builder().build()
     private var camera: Camera? = null
     private var cameraProvider: ProcessCameraProvider? = null
+
+    private val _maxZoomRatio = MutableStateFlow(FALLBACK_MAX_ZOOM)
+    override val maxZoomRatio: StateFlow<Float> = _maxZoomRatio.asStateFlow()
 
     override fun setSurfaceProvider(provider: Preview.SurfaceProvider) {
         preview.setSurfaceProvider(provider)
@@ -47,6 +59,17 @@ class CameraXController(
                 imageCapture,
             )
             cameraProvider = provider
+
+            // Read the real device max zoom. zoomState is LiveData populated
+            // synchronously by CameraX during bind on supported devices.
+            val state = camera?.cameraInfo?.zoomState?.value
+            val deviceMax = state?.maxZoomRatio
+            if (deviceMax != null && deviceMax > 1f) {
+                _maxZoomRatio.value = deviceMax
+                Log.i(TAG, "Camera bound, maxZoomRatio=$deviceMax")
+            } else {
+                Log.w(TAG, "zoomState not ready post-bind, keeping fallback $FALLBACK_MAX_ZOOM")
+            }
             Result.success(Unit)
         } catch (e: CancellationException) {
             // 結構化併發要求 cancellation 必須往外丟，不可吞掉
@@ -58,7 +81,8 @@ class CameraXController(
     }
 
     override fun setZoom(ratio: Float) {
-        camera?.cameraControl?.setZoomRatio(ratio.coerceIn(1f, 10f))
+        val clamped = ratio.coerceIn(1f, _maxZoomRatio.value)
+        camera?.cameraControl?.setZoomRatio(clamped)
     }
 
     override fun setTorch(enabled: Boolean) {

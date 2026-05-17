@@ -191,11 +191,15 @@ class MagnifierViewModelTest {
 
     private class RecordingCameraController(
         val captureResult: Result<Bitmap> = Result.success(FAKE_BITMAP),
+        initialMaxZoom: Float = 10f,   // mirrors the historical test range
     ) : CameraController {
         var lastZoom: Float? = null
         var lastTorch: Boolean? = null
         var bindCalls = 0
         var releaseCalls = 0
+        private val _maxZoom = MutableStateFlow(initialMaxZoom)
+        override val maxZoomRatio: StateFlow<Float> = _maxZoom.asStateFlow()
+        fun emitMaxZoom(max: Float) { _maxZoom.value = max }
         override fun setSurfaceProvider(provider: Preview.SurfaceProvider) {}
         override suspend fun bind(lifecycleOwner: LifecycleOwner): Result<Unit> {
             bindCalls++
