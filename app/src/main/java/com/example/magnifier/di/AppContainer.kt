@@ -7,6 +7,7 @@ import com.example.magnifier.data.media.MediaRepository
 import com.example.magnifier.data.media.MediaStoreMediaRepository
 import com.example.magnifier.data.permission.AndroidPermissionGate
 import com.example.magnifier.data.permission.PermissionGate
+import com.example.magnifier.data.settings.ThemePreferences
 
 /**
  * Manual DI container scoped to the Application instance.
@@ -21,4 +22,5 @@ class AppContainer(applicationContext: Context) {
     val mediaRepository: MediaRepository by lazy { MediaStoreMediaRepository(applicationContext) }
     val cameraController: CameraController by lazy { CameraXController(applicationContext) }
     val permissionGate: PermissionGate by lazy { AndroidPermissionGate(applicationContext) }
+    val themePreferences: ThemePreferences by lazy { ThemePreferences(applicationContext) }
 }

@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -31,7 +32,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,8 +44,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.example.magnifier.MagnifierApplication
 import com.example.magnifier.data.media.MediaRepository
 import com.example.magnifier.ui.UiEvent
+import com.example.magnifier.ui.settings.ThemePickerSheet
 import com.example.magnifier.ui.theme.LocalSpacing
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -58,6 +63,12 @@ fun GalleryScreen(
         factory = remember(mediaRepository) { GalleryViewModelFactory(mediaRepository) }
     )
     val uiState by viewModel.uiState.collectAsState()
+
+    val themePreferences = remember(context) {
+        (context.applicationContext as MagnifierApplication).container.themePreferences
+    }
+    val currentTheme by themePreferences.current
+    var showThemePicker by remember { mutableStateOf(false) }
 
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
@@ -103,13 +114,24 @@ fun GalleryScreen(
                     }
                 },
                 actions = {
-                    if (uiState.isSelectionMode && uiState.selectedUris.isNotEmpty()) {
-                        IconButton(onClick = { viewModel.deleteSelected() }) {
-                            Icon(
-                                imageVector = Icons.Default.Delete,
-                                contentDescription = "刪除已選擇的照片",
-                                tint = MaterialTheme.colorScheme.error
-                            )
+                    when {
+                        uiState.isSelectionMode && uiState.selectedUris.isNotEmpty() -> {
+                            IconButton(onClick = { viewModel.deleteSelected() }) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = "刪除已選擇的照片",
+                                    tint = MaterialTheme.colorScheme.error
+                                )
+                            }
+                        }
+                        !uiState.isSelectionMode -> {
+                            IconButton(onClick = { showThemePicker = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.Palette,
+                                    contentDescription = "選擇主題",
+                                    tint = MaterialTheme.colorScheme.onSurface,
+                                )
+                            }
                         }
                     }
                 },
@@ -182,6 +204,14 @@ fun GalleryScreen(
 
         uiState.viewerUri?.let { uri ->
             ImageViewer(imageUri = uri, onClose = viewModel::closeViewer)
+        }
+
+        if (showThemePicker) {
+            ThemePickerSheet(
+                current = currentTheme,
+                onSelect = { themePreferences.select(it) },
+                onDismiss = { showThemePicker = false },
+            )
         }
     }
 }

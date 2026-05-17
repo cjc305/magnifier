@@ -60,7 +60,7 @@ import com.example.magnifier.ui.UiEvent
 import com.example.magnifier.ui.camera.CameraPreview
 import com.example.magnifier.ui.gallery.GalleryScreen
 import com.example.magnifier.ui.theme.LocalSpacing
-import com.example.magnifier.ui.theme.NoirPalette
+import com.example.magnifier.ui.theme.LocalThemePalette
 
 @Composable
 fun MagnifierScreen() {
@@ -190,6 +190,7 @@ private fun FloatingControlCapsule(
     modifier: Modifier = Modifier,
 ) {
     val spacing = LocalSpacing.current
+    val palette = LocalThemePalette.current
     val capsuleShape = RoundedCornerShape(spacing.xxxl)
 
     Column(
@@ -201,15 +202,15 @@ private fun FloatingControlCapsule(
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        NoirPalette.SurfaceContainerHigh.copy(alpha = 0.88f),
-                        NoirPalette.SurfaceContainer.copy(alpha = 0.92f),
+                        MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.88f),
+                        MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.92f),
                     )
                 ),
                 shape = capsuleShape,
             )
             .border(
                 width = 0.5.dp,
-                color = NoirPalette.Outline.copy(alpha = 0.6f),
+                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.6f),
                 shape = capsuleShape,
             )
             .padding(horizontal = spacing.xl, vertical = spacing.lg),
@@ -337,6 +338,7 @@ private fun ControlRow(
 private fun CaptureFab(onCapture: () -> Unit) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
+    val palette = LocalThemePalette.current
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.92f else 1f,
         animationSpec = spring(
@@ -355,8 +357,8 @@ private fun CaptureFab(onCapture: () -> Unit) {
             .shadow(
                 elevation = 12.dp,
                 shape = CircleShape,
-                ambientColor = NoirPalette.Shadow,
-                spotColor = NoirPalette.Shadow,
+                ambientColor = palette.shadow,
+                spotColor = palette.shadow,
             ),
         shape = CircleShape,
         colors = IconButtonDefaults.filledIconButtonColors(

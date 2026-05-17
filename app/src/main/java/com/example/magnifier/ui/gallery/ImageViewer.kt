@@ -31,7 +31,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.magnifier.ui.theme.LocalSpacing
-import com.example.magnifier.ui.theme.NoirPalette
 
 @Composable
 fun ImageViewer(
@@ -55,7 +54,7 @@ fun ImageViewer(
             // Warm-tinted near-black scrim, never pure #000000.
             // Slight amber undertone bleeds into the perimeter, framing
             // the photo like a gallery wall rather than a void.
-            .background(NoirPalette.Scrim)
+            .background(MaterialTheme.colorScheme.scrim)
             .pointerInput(Unit) {
                 detectTapGestures(
                     onDoubleTap = {
@@ -91,7 +90,7 @@ fun ImageViewer(
             modifier = Modifier
                 .align(Alignment.TopStart)
                 .fillMaxWidth()
-                .background(NoirPalette.SurfaceContainer.copy(alpha = 0.72f))
+                .background(MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.72f))
                 .pointerInput(Unit) { }
         ) {
             IconButton(
