@@ -41,6 +41,7 @@ Magnifier with 1-10× zoom + flashlight. Read small text. Offline, no ads.
 • 一鍵拍照,放大畫面存到相簿留存查看
 • 內建相簿,瀏覽過往放大過的照片,可單張或多張刪除
 • 完全離線運作,沒有網路也能用
+• 6 套主題可切換(琥珀夜、翠綠、青藍、暖白、寒白、薰衣紫),配合不同光線環境與個人偏好
 
 【適合場景】
 ✓ 老花眼看小字、藥品說明、處方箋
@@ -85,6 +86,7 @@ KEY FEATURES
 • One-tap capture saves magnified frames to your gallery
 • In-app gallery to review and delete past captures (single or batch)
 • Fully offline — works without an internet connection
+• 6 themes to choose from (Noir/Amber, Forest/Emerald, Cyber/Teal, Blush, Ice, Lavender) — match your lighting environment or personal taste
 
 PERFECT FOR
 ✓ Reading small print on medication labels and prescriptions

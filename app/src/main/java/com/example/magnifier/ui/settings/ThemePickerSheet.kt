@@ -1,5 +1,7 @@
 package com.example.magnifier.ui.settings
 
+import android.content.Intent
+import androidx.core.net.toUri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -14,6 +16,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -24,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -72,7 +76,75 @@ fun ThemePickerSheet(
                     },
                 )
             }
+
+            AboutBlock()
         }
+    }
+}
+
+@Composable
+private fun AboutBlock() {
+    val spacing = LocalSpacing.current
+    HorizontalDivider(
+        modifier = Modifier.padding(vertical = spacing.md),
+        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f),
+    )
+    Text(
+        text = "關於",
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.onSurface,
+        modifier = Modifier.padding(bottom = spacing.sm),
+    )
+    AboutRow(label = "版本", value = "1.0")
+    AboutRow(
+        label = "原始碼",
+        value = "github.com/cjc305/magnifier",
+        url = "https://github.com/cjc305/magnifier",
+    )
+    AboutRow(
+        label = "隱私權政策",
+        value = "查看線上版本",
+        url = "https://cjc305.github.io/magnifier/privacy.html",
+    )
+    AboutRow(
+        label = "字體",
+        value = "Space Grotesk · OFL",
+        url = "https://fonts.google.com/specimen/Space+Grotesk",
+    )
+}
+
+@Composable
+private fun AboutRow(
+    label: String,
+    value: String,
+    url: String? = null,
+) {
+    val context = LocalContext.current
+    val spacing = LocalSpacing.current
+    val clickModifier = if (url != null) {
+        Modifier.clickable {
+            context.startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
+        }
+    } else Modifier
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(clickModifier)
+            .padding(vertical = spacing.xs),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(1f),
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            color = if (url != null) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.onSurface,
+        )
     }
 }
 
