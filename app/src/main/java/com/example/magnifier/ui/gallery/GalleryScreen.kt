@@ -20,6 +20,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -47,6 +48,7 @@ import coil.compose.AsyncImage
 import com.example.magnifier.MagnifierApplication
 import com.example.magnifier.data.media.MediaRepository
 import com.example.magnifier.ui.UiEvent
+import com.example.magnifier.ui.settings.AboutSheet
 import com.example.magnifier.ui.settings.ThemePickerSheet
 import com.example.magnifier.ui.theme.LocalSpacing
 
@@ -69,6 +71,7 @@ fun GalleryScreen(
     }
     val currentTheme by themePreferences.current
     var showThemePicker by remember { mutableStateOf(false) }
+    var showAbout by remember { mutableStateOf(false) }
 
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
@@ -129,6 +132,13 @@ fun GalleryScreen(
                                 Icon(
                                     imageVector = Icons.Default.Palette,
                                     contentDescription = "選擇主題",
+                                    tint = MaterialTheme.colorScheme.onSurface,
+                                )
+                            }
+                            IconButton(onClick = { showAbout = true }) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Info,
+                                    contentDescription = "關於本 App",
                                     tint = MaterialTheme.colorScheme.onSurface,
                                 )
                             }
@@ -212,6 +222,10 @@ fun GalleryScreen(
                 onSelect = { themePreferences.select(it) },
                 onDismiss = { showThemePicker = false },
             )
+        }
+
+        if (showAbout) {
+            AboutSheet(onDismiss = { showAbout = false })
         }
     }
 }
